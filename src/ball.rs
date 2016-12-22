@@ -22,6 +22,14 @@ impl Ball {
             bounce: false,
         }
     }
+
+    pub fn get_center(&self) -> Point {
+        self.center
+    }
+
+    pub fn get_size(&self) -> u32 {
+        self.size
+    }
 }
 
 enum BallStatus {

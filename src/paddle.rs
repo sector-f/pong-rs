@@ -14,4 +14,16 @@ impl Paddle {
             width: 5,
         }
     }
+
+    pub fn center(&self) -> Point {
+        self.center
+    }
+
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
 }
