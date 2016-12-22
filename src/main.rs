@@ -37,12 +37,22 @@ fn main() {
 
     let mut events = window.events();
     while let Some(e) = events.next(&mut window) {
-        if let Some(r) = e.render_args() {
-            pong.render(&r);
+        match e {
+            Event::Render(args) => {
+                pong.render(&mut GlGraphics::new(opengl), &args);
+            },
+            Event::Update(args) => {
+                pong.update(&args);
+            },
+            _ => {},
         }
 
-        if let Some(u) = e.update_args() {
-            pong.update(&u);
-        }
+        // if let Some(r) = e.render_args() {
+        //     pong.render(&r);
+        // }
+
+        // if let Some(u) = e.update_args() {
+        //     pong.update(&u);
+        // }
     }
 }

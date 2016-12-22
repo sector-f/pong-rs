@@ -10,8 +10,8 @@ impl Paddle {
     pub fn new(center: Point) -> Self {
         Paddle {
             center: center,
-            height: 20,
-            width: 5,
+            height: 70,
+            width: 7,
         }
     }
 

@@ -14,6 +14,7 @@ const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 pub struct Pong {
     gl: GlGraphics,
     ball: Ball,
+    paddle_gap: u32,
     screen_width: u32,
     screen_height: u32,
     p1_paddle: Paddle,
@@ -24,12 +25,15 @@ pub struct Pong {
 
 impl Pong {
     pub fn new(gl: GlGraphics, w: u32, h: u32) -> Self {
-        let p1_point = Point::new(10, h/2);
-        let p2_point = Point::new(w-10, h/2);
+        let paddle_gap = 20;
+
+        let p1_point = Point::new(paddle_gap, h/2);
+        let p2_point = Point::new(w-paddle_gap, h/2);
 
         Pong {
             gl: gl,
             ball: Ball::new(w, h),
+            paddle_gap: paddle_gap,
             screen_width: w,
             screen_height: h,
             p1_paddle: Paddle::new(p1_point),
@@ -39,25 +43,38 @@ impl Pong {
         }
     }
 
-    pub fn render(&mut self, args:&RenderArgs) {
-        let p1_rect = rectangle::Rectangle::new(WHITE);
-        let p2_rect = rectangle::Rectangle::new(WHITE);
+    pub fn render(&mut self, gl: &mut GlGraphics, args:&RenderArgs) {
+        let mut p1_rect = rectangle::Rectangle::new(WHITE);
+        let mut p2_rect = rectangle::Rectangle::new(WHITE);
 
-        self.gl.draw(args.viewport(), |c, gl| {
+        gl.draw(args.viewport(), |c, gl| {
             clear(BLACK, gl);
 
-            // The code below makes the borrow checker unhappy
-            // p1_rect.draw(
-            //     [
-            //         (self.p1_paddle.center().x - self.p1_paddle.width() / 2) as f64,
-            //         (self.p1_paddle.center().y - self.p1_paddle.height() / 2) as f64,
-            //         self.p1_paddle.width() as f64,
-            //         self.p1_paddle.height() as f64,
-            //     ],
-            //     &c.draw_state,
-            //     c.transform,
-            //     gl,
-            // );
+            // Draw P1's paddle
+            &p1_rect.draw(
+                [
+                    (self.p1_paddle.center().x - self.p1_paddle.width() / 2) as f64,
+                    (self.p1_paddle.center().y - self.p1_paddle.height() / 2) as f64,
+                    self.p1_paddle.width() as f64,
+                    self.p1_paddle.height() as f64,
+                ],
+                &c.draw_state,
+                c.transform,
+                gl,
+            );
+
+            // Draw P2's paddle
+            &p2_rect.draw(
+                [
+                    (self.screen_width - self.paddle_gap - self.p2_paddle.width() / 2) as f64,
+                    (self.screen_height / 2 - self.p2_paddle.height() / 2) as f64,
+                    self.p2_paddle.width() as f64,
+                    self.p2_paddle.height() as f64,
+                ],
+                &c.draw_state,
+                c.transform,
+                gl,
+            );
         });
     }
 
