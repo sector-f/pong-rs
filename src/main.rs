@@ -45,15 +45,10 @@ fn main() {
             Event::Update(args) => {
                 pong.update(&args);
             },
+            Event::Input(input) => {
+                pong.input(&input);
+            },
             _ => {},
         }
-
-        // if let Some(r) = e.render_args() {
-        //     pong.render(&r);
-        // }
-
-        // if let Some(u) = e.update_args() {
-        //     pong.update(&u);
-        // }
     }
 }

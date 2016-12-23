@@ -44,7 +44,6 @@ impl Pong {
     pub fn render(&mut self, gl: &mut GlGraphics, args:&RenderArgs) {
         let mut paddle = rectangle::Rectangle::new(WHITE);
         let mut ball = rectangle::Rectangle::new(WHITE);
-        // let mut ball = circle_arc::CircleArc::new(WHITE, self.ball.size() as f64, 0f64, 6.28318f64).resolution(1000);
 
         gl.draw(args.viewport(), |c, gl| {
             clear(BLACK, gl);
@@ -66,7 +65,7 @@ impl Pong {
             &paddle.draw(
                 [
                     (self.screen_width as f64 - self.paddle_gap as f64 - self.p2_paddle.width() as f64 / 2f64) as f64,
-                    (self.screen_height as f64 / 2f64 - self.p2_paddle.height() as f64 / 2.0) as f64,
+                    (self.p2_paddle.center.y - self.p2_paddle.height()  as f64 / 2.0) as f64,
                     self.p2_paddle.width() as f64,
                     self.p2_paddle.height() as f64,
                 ],
@@ -91,5 +90,19 @@ impl Pong {
     }
 
     pub fn update(&mut self, args: &UpdateArgs) {
+    }
+
+    pub fn input(&mut self, input: &Input) {
+        match input {
+            &Input::Move(motion) => {
+                match motion {
+                    Motion::MouseCursor(_, y) => {
+                        self.p1_paddle.set_location(y as u32);
+                    },
+                    _ => {},
+                }
+            },
+            _ => {},
+        }
     }
 }

@@ -15,6 +15,10 @@ impl Paddle {
         }
     }
 
+    pub fn set_location(&mut self, y: u32) {
+        self.center = Point::new(self.center.x, y as f64);
+    }
+
     pub fn center(&self) -> Point {
         self.center
     }
