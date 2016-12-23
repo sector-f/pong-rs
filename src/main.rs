@@ -44,9 +44,7 @@ fn main() {
             },
             Event::Update(args) => {
                 pong.update(&args);
-                let (p1_score, p2_score) = pong.scores();
-                let title = format!("Pong {}-{}", p1_score, p2_score);
-                window.set_title(title);
+                window.set_title(pong.title());
             },
             Event::Input(input) => {
                 pong.input(&input);

@@ -3,6 +3,7 @@ use util::Point;
 pub struct Ball {
     center: Point,
     status: BallStatus,
+    pub visible: bool,
     size: u32,
     dx: f64,
     dy: f64,
@@ -15,12 +16,17 @@ impl Ball {
         Ball {
             center: Point::new(w/2f64, h/2f64),
             status: BallStatus::Ready,
+            visible: true,
             size: 15,
             dx: 0f64,
             dy: 0f64,
             speed: 0,
             bounce: false,
         }
+    }
+
+    pub fn status(&self) -> BallStatus {
+        self.status
     }
 
     pub fn center(&self) -> Point {
@@ -32,7 +38,8 @@ impl Ball {
     }
 }
 
-enum BallStatus {
+#[derive(Copy, Clone)]
+pub enum BallStatus {
     Ready,
     Launched,
 }

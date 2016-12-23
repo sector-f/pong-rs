@@ -12,6 +12,8 @@ const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 pub struct Pong {
+    state: GameState,
+    lastpoint: Option<LastPoint>,
     ball: Ball,
     paddle_gap: u32,
     screen_width: u32,
@@ -30,6 +32,8 @@ impl Pong {
         let p2_point = Point::new(w as f64 - paddle_gap as f64, h as f64/2f64);
 
         Pong {
+            state: GameState::Unstarted,
+            lastpoint: None,
             ball: Ball::new(w as f64, h as f64),
             paddle_gap: paddle_gap,
             screen_width: w,
@@ -75,24 +79,60 @@ impl Pong {
             );
 
             // Draw the ball
-            &ball.draw(
-                [
-                    (self.ball.center().x as f64 - self.ball.size() as f64 ) as f64,
-                    (self.ball.center().y as f64 - self.ball.size() as f64) as f64,
-                    self.ball.size() as f64,
-                    self.ball.size() as f64,
-                ],
-                &c.draw_state,
-                c.transform,
-                gl,
-            );
+            if self.ball.visible {
+                &ball.draw(
+                    [
+                        (self.ball.center().x as f64 - self.ball.size() as f64 ) as f64,
+                        (self.ball.center().y as f64 - self.ball.size() as f64) as f64,
+                        self.ball.size() as f64,
+                        self.ball.size() as f64,
+                    ],
+                    &c.draw_state,
+                    c.transform,
+                    gl,
+                );
+            }
         });
     }
 
     pub fn update(&mut self, args: &UpdateArgs) {
+        match self.state {
+            GameState::Unstarted => {
+            },
+            GameState::Started => {
+            },
+            GameState::P1Win => {
+                self.ball.visible = false;
+            },
+            GameState::P2Win => {
+                self.ball.visible = false;
+            },
+        }
     }
 
     pub fn input(&mut self, input: &Input) {
+        match self.state {
+            GameState::Unstarted => {
+                match input {
+                    &Input::Release(button) => {
+                        match button {
+                            Button::Keyboard(key) => {
+                                match key {
+                                    Key::Space => {
+                                        self.state = GameState::Started;
+                                    },
+                                    _ => {},
+                                }
+                            },
+                            _ => {},
+                        }
+                    },
+                    _ => {},
+                }
+            },
+            _ => {},
+        }
+
         match input {
             &Input::Move(motion) => {
                 match motion {
@@ -108,7 +148,32 @@ impl Pong {
         }
     }
 
-    pub fn scores(&self) -> (u8, u8) {
-        (self.p1_score, self.p2_score)
+    pub fn title(&self) -> String {
+        match self.state {
+            GameState::Unstarted => {
+                format!("Pong: Press space to begin")
+            },
+            GameState::Started => {
+                format!("Pong: {}-{}", self.p1_score, self.p2_score)
+            },
+            GameState::P1Win => {
+                format!("Pong: Player 1 wins")
+            },
+            GameState::P2Win => {
+                format!("Pong: Player 2 wins")
+            },
+        }
     }
+}
+
+enum GameState {
+    Unstarted,
+    Started,
+    P1Win,
+    P2Win,
+}
+
+enum LastPoint {
+    P1,
+    P2,
 }
