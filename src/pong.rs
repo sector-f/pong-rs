@@ -107,4 +107,8 @@ impl Pong {
             _ => {},
         }
     }
+
+    pub fn scores(&self) -> (u8, u8) {
+        (self.p1_score, self.p2_score)
+    }
 }
