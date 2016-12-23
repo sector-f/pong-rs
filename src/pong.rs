@@ -97,7 +97,9 @@ impl Pong {
             &Input::Move(motion) => {
                 match motion {
                     Motion::MouseCursor(_, y) => {
-                        self.p1_paddle.set_location(y as u32);
+                        if y - self.p1_paddle.height() as f64 / 2.0 > 0.0 && y + self.p1_paddle.height() as f64 / 2.0 < self.screen_height as f64 {
+                            self.p1_paddle.set_location(y as u32);
+                        }
                     },
                     _ => {},
                 }
