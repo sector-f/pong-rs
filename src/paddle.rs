@@ -1,7 +1,7 @@
 use util::Point;
 
 pub struct Paddle {
-    center: Point,
+    pub center: Point,
     height: u32,
     width: u32,
 }

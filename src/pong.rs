@@ -12,7 +12,6 @@ const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 pub struct Pong {
-    gl: GlGraphics,
     ball: Ball,
     paddle_gap: u32,
     screen_width: u32,
@@ -24,15 +23,14 @@ pub struct Pong {
 }
 
 impl Pong {
-    pub fn new(gl: GlGraphics, w: u32, h: u32) -> Self {
+    pub fn new(w: u32, h: u32) -> Self {
         let paddle_gap = 20;
 
-        let p1_point = Point::new(paddle_gap, h/2);
-        let p2_point = Point::new(w-paddle_gap, h/2);
+        let p1_point = Point::new(paddle_gap as f64, h as f64/2f64);
+        let p2_point = Point::new(w as f64 - paddle_gap as f64, h as f64/2f64);
 
         Pong {
-            gl: gl,
-            ball: Ball::new(w, h),
+            ball: Ball::new(w as f64, h as f64),
             paddle_gap: paddle_gap,
             screen_width: w,
             screen_height: h,
@@ -44,17 +42,18 @@ impl Pong {
     }
 
     pub fn render(&mut self, gl: &mut GlGraphics, args:&RenderArgs) {
-        let mut p1_rect = rectangle::Rectangle::new(WHITE);
-        let mut p2_rect = rectangle::Rectangle::new(WHITE);
+        let mut paddle = rectangle::Rectangle::new(WHITE);
+        let mut ball = rectangle::Rectangle::new(WHITE);
+        // let mut ball = circle_arc::CircleArc::new(WHITE, self.ball.size() as f64, 0f64, 6.28318f64).resolution(1000);
 
         gl.draw(args.viewport(), |c, gl| {
             clear(BLACK, gl);
 
             // Draw P1's paddle
-            &p1_rect.draw(
+            &paddle.draw(
                 [
-                    (self.p1_paddle.center().x - self.p1_paddle.width() / 2) as f64,
-                    (self.p1_paddle.center().y - self.p1_paddle.height() / 2) as f64,
+                    (self.p1_paddle.center().x as f64 - self.p1_paddle.width() as f64 / 2f64) as f64,
+                    (self.p1_paddle.center().y as f64 - self.p1_paddle.height() as f64 / 2f64) as f64,
                     self.p1_paddle.width() as f64,
                     self.p1_paddle.height() as f64,
                 ],
@@ -64,12 +63,25 @@ impl Pong {
             );
 
             // Draw P2's paddle
-            &p2_rect.draw(
+            &paddle.draw(
                 [
-                    (self.screen_width - self.paddle_gap - self.p2_paddle.width() / 2) as f64,
-                    (self.screen_height / 2 - self.p2_paddle.height() / 2) as f64,
+                    (self.screen_width as f64 - self.paddle_gap as f64 - self.p2_paddle.width() as f64 / 2f64) as f64,
+                    (self.screen_height as f64 / 2f64 - self.p2_paddle.height() as f64 / 2.0) as f64,
                     self.p2_paddle.width() as f64,
                     self.p2_paddle.height() as f64,
+                ],
+                &c.draw_state,
+                c.transform,
+                gl,
+            );
+
+            // Draw the ball
+            &ball.draw(
+                [
+                    (self.ball.center().x as f64 - self.ball.size() as f64 ) as f64,
+                    (self.ball.center().y as f64 - self.ball.size() as f64) as f64,
+                    self.ball.size() as f64,
+                    self.ball.size() as f64,
                 ],
                 &c.draw_state,
                 c.transform,

@@ -30,16 +30,17 @@ fn main() {
     .expect("Failed to create window");
 
     let mut pong = Pong::new(
-        GlGraphics::new(opengl),
         window.size().width,
         window.size().height,
     );
+
+    let mut gl = GlGraphics::new(opengl);
 
     let mut events = window.events();
     while let Some(e) = events.next(&mut window) {
         match e {
             Event::Render(args) => {
-                pong.render(&mut GlGraphics::new(opengl), &args);
+                pong.render(&mut gl, &args);
             },
             Event::Update(args) => {
                 pong.update(&args);
