@@ -13,7 +13,7 @@ const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 pub struct Pong {
     state: GameState,
-    lastpoint: Option<LastPoint>,
+    lastpoint: Option<Player>,
     ball: Ball,
     paddle_gap: u32,
     screen_width: u32,
@@ -82,7 +82,7 @@ impl Pong {
             if self.ball.visible {
                 &ball.draw(
                     [
-                        (self.ball.center().x as f64 - self.ball.size() as f64 ) as f64,
+                        (self.ball.center().x as f64 - self.ball.size() as f64) as f64,
                         (self.ball.center().y as f64 - self.ball.size() as f64) as f64,
                         self.ball.size() as f64,
                         self.ball.size() as f64,
@@ -100,6 +100,49 @@ impl Pong {
             GameState::Unstarted => {
             },
             GameState::Started => {
+                // Update the ball's position
+                let new_ball_x = self.ball.center.x + self.ball.dx * args.dt;
+                let new_ball_y = self.ball.center.y + self.ball.dy * args.dt;
+                self.ball.center = Point::new(new_ball_x, new_ball_y);
+
+                // See if the ball hits a wall
+                if self.ball.top() == 0 || self.ball.bottom() >= self.screen_height {
+                    self.ball.dy *= -1.0;
+                }
+
+                println!("{} {}", self.ball.left(), self.p1_paddle.right());
+
+                // See if the ball hits a paddle
+                if self.p2_paddle.left() - self.ball.right() <= 1
+                    && self.p2_paddle.top() < self.ball.top()
+                    && self.p2_paddle.bottom() > self.ball.bottom() {
+                        self.ball.dx *= -1.0;
+                }
+
+                if self.ball.left() - self.p1_paddle.right() <= 1
+                    && self.p1_paddle.top() < self.ball.top()
+                    && self.p1_paddle.bottom() > self.ball.bottom() {
+                        self.ball.dx *= -1.0;
+                }
+
+                // Check for a win
+                if self.p1_score == 10 {
+                    self.state = GameState::P1Win;
+                } else if self.p2_score == 10 {
+                    self.state = GameState::P2Win;
+                }
+
+                // See if either player scores
+                if self.ball.left() <= 0 {
+                    self.p2_score += 1;
+                    self.lastpoint = Some(Player::P2);
+                    self.start();
+                } else if self.ball.right() >= self.screen_width {
+                    self.p1_score += 1;
+                    self.lastpoint = Some(Player::P1);
+                    self.start();
+                }
+
             },
             GameState::P1Win => {
                 self.ball.visible = false;
@@ -119,7 +162,7 @@ impl Pong {
                             Button::Keyboard(key) => {
                                 match key {
                                     Key::Space => {
-                                        self.state = GameState::Started;
+                                        self.start();
                                     },
                                     _ => {},
                                 }
@@ -143,10 +186,13 @@ impl Pong {
 
                         if center_to_top as f64 > 0.0 && center_to_bottom < self.screen_height as f64 {
                             self.p1_paddle.set_location(y as u32);
+                            self.p2_paddle.set_location(y as u32);
                         } else if y > 0.0 && y < half_paddle {
                             self.p1_paddle.set_location(half_paddle as u32);
+                            self.p2_paddle.set_location(half_paddle as u32);
                         } else if y < self.screen_height as f64 && y > self.screen_height as f64 - half_paddle {
                             self.p1_paddle.set_location((self.screen_height as f64 - half_paddle) as u32);
+                            self.p2_paddle.set_location((self.screen_height as f64 - half_paddle) as u32);
                         }
                     },
                     _ => {},
@@ -154,6 +200,17 @@ impl Pong {
             },
             _ => {},
         }
+    }
+
+    pub fn start(&mut self) {
+        self.state = GameState::Started;
+        self.ball.center = Point::new(
+            self.screen_width as f64 / 2.0,
+            self.screen_height as f64 / 2.0
+        );
+        self.ball.speed = 5;
+        self.ball.dx = 50.0 * self.ball.speed as f64;
+        self.ball.dy = 50.0 * self.ball.speed as f64;
     }
 
     pub fn title(&self) -> String {
@@ -181,7 +238,7 @@ enum GameState {
     P2Win,
 }
 
-enum LastPoint {
+enum Player {
     P1,
     P2,
 }

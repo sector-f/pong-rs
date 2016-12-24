@@ -1,13 +1,13 @@
 use util::Point;
 
 pub struct Ball {
-    center: Point,
+    pub center: Point,
     status: BallStatus,
     pub visible: bool,
     size: u32,
-    dx: f64,
-    dy: f64,
-    speed: u32,
+    pub dx: f64,
+    pub dy: f64,
+    pub speed: u32,
     bounce: bool,
 }
 
@@ -23,6 +23,22 @@ impl Ball {
             speed: 0,
             bounce: false,
         }
+    }
+
+    pub fn top(&self) -> u32 {
+        (self.center.y - self.size() as f64 / 2.0) as u32
+    }
+
+    pub fn bottom(&self) -> u32 {
+        (self.center.y + self.size() as f64 / 2.0) as u32
+    }
+
+    pub fn left(&self) -> u32 {
+        (self.center.x - self.size() as f64 / 2.0) as u32
+    }
+
+    pub fn right(&self) -> u32 {
+        (self.center.x + self.size() as f64 / 2.0) as u32
     }
 
     pub fn status(&self) -> BallStatus {
