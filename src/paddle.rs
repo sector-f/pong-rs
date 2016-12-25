@@ -1,22 +1,25 @@
-use util::Point;
+use nalgebra::Point2;
 
 pub struct Paddle {
-    pub center: Point,
+    pub center: Point2<f64>,
     height: u32,
     width: u32,
 }
 
 impl Paddle {
-    pub fn new(center: Point) -> Self {
+    pub fn new(center: Point2<f64>) -> Self {
+        let h = 70;
+        let w = 10;
+
         Paddle {
             center: center,
-            height: 70,
-            width: 10,
+            height: h,
+            width: w,
         }
     }
 
     pub fn set_location(&mut self, y: u32) {
-        self.center = Point::new(self.center.x, y as f64);
+        self.center = Point2::new(self.center.x, y as f64);
     }
 
     pub fn top(&self) -> u32 {
@@ -35,9 +38,9 @@ impl Paddle {
         (self.center.x + self.width() as f64 / 2.0) as u32
     }
 
-    pub fn center(&self) -> Point {
-        self.center
-    }
+    // pub fn center(&self) -> Point2<f64> {
+    //     self.center
+    // }
 
     pub fn width(&self) -> u32 {
         self.width

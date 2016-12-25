@@ -1,3 +1,5 @@
+extern crate ncollide_geometry;
+extern crate nalgebra;
 extern crate piston;
 
 extern crate piston_window;
@@ -15,7 +17,6 @@ mod pong;
 use pong::Pong;
 mod paddle;
 mod ball;
-mod util;
 
 fn main() {
     let opengl = OpenGL::V3_2;
