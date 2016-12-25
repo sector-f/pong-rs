@@ -48,7 +48,7 @@ fn main() {
                 window.set_title(pong.title());
             },
             Event::Input(input) => {
-                pong.input(&input);
+                // pong.input(&input);
             },
             _ => {},
         }

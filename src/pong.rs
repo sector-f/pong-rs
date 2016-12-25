@@ -101,12 +101,11 @@ impl Pong {
     pub fn update(&mut self, args: &UpdateArgs) {
         match self.state {
             GameState::Unstarted => {
+                // Make the game play itself for easier testing
+                self.start();
             },
             GameState::Started => {
-                // Update the ball's position
-                let new_ball_x = self.ball.center.x + self.ball.dx * args.dt;
-                let new_ball_y = self.ball.center.y + self.ball.dy * args.dt;
-                self.ball.center = Point2::new(new_ball_x, new_ball_y);
+                self.ball.update_position(args.dt);
 
                 // Update the ball's hitbox
                 let ball_top_left = Point2::new(self.ball.top() as f64, self.ball.left() as f64);
@@ -128,16 +127,31 @@ impl Pong {
                     self.ball.dy *= -1.0;
                 }
 
-                // See if the ball hits a paddle
-                if ball_hitbox.intersects(&p1_paddle_hitbox)
-                    && self.ball.center.x > self.p1_paddle.center.x {
-                    self.ball.dx *= -1.0;
+                self.ball.increase_frames();
+
+                // See if the ball hits p1's paddle
+                if self.ball.frames > 5 {
+                    if ball_hitbox.intersects(&p1_paddle_hitbox)
+                        && self.ball.center.x > self.p1_paddle.center.x {
+                            self.ball.frames = 0;
+                            self.ball.dx *= -1.0;
+                            self.ball.increase_speed();
+                    }
                 }
 
-                if ball_hitbox.intersects(&p2_paddle_hitbox)
-                    && self.ball.center.x < self.p2_paddle.center.x {
-                    self.ball.dx *= -1.0;
+                // See if the ball hits p2's paddle
+                if self.ball.frames > 5 {
+                    if ball_hitbox.intersects(&p2_paddle_hitbox)
+                        && self.ball.center.x < self.p2_paddle.center.x {
+                            self.ball.frames = 0;
+                            self.ball.dx *= -1.0;
+                            self.ball.increase_speed();
+                    }
                 }
+
+                // Make the game play itself for easier testing
+                self.p1_paddle.set_location(self.ball.center.y as u32);
+                self.p2_paddle.set_location(self.ball.center.y as u32);
 
                 // Check for a win
                 // if self.p1_score == 10 {
@@ -156,7 +170,6 @@ impl Pong {
                     self.lastpoint = Some(Player::P1);
                     self.start();
                 }
-
             },
             GameState::P1Win => {
                 self.ball.visible = false;
