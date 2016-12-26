@@ -10,19 +10,19 @@ pub trait Hitbox {
     }
 
     fn top_left(&self) -> Point2<f64> {
-        Point2::new(self.top() as f64, self.left() as f64)
+        Point2::new(self.left() as f64, self.top() as f64)
     }
 
     fn top_right(&self) -> Point2<f64> {
-        Point2::new(self.top() as f64, self.right() as f64)
+        Point2::new(self.right() as f64, self.top() as f64)
     }
 
     fn bottom_left(&self) -> Point2<f64> {
-        Point2::new(self.bottom() as f64, self.left() as f64)
+        Point2::new(self.left() as f64, self.bottom() as f64)
     }
 
     fn bottom_right(&self) -> Point2<f64> {
-        Point2::new(self.bottom() as f64, self.right() as f64)
+        Point2::new(self.right() as f64, self.bottom() as f64)
     }
 
     fn top(&self) -> i32;

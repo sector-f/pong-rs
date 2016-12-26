@@ -1,5 +1,6 @@
 use ncollide_geometry::bounding_volume::AABB;
-use nalgebra::Point2;
+use ncollide_geometry::query::ray_internal::Ray;
+use nalgebra::{Point2, Vector2};
 use hitbox::Hitbox;
 
 pub struct Ball {
@@ -29,14 +30,42 @@ impl Ball {
         }
     }
 
-    pub fn increase_frames(&mut self) {
-        let (new_count, overflow) = self.frames.overflowing_add(1);
-        if ! overflow {
-            self.frames = new_count;
-        } else {
-            self.frames = 10;
+    pub fn top_left_ray(&self) -> Ray<Point2<f64>> {
+        Ray {
+            origin: self.top_left(),
+            dir: Vector2::new(self.dx, self.dy),
         }
     }
+
+    pub fn top_right_ray(&self) -> Ray<Point2<f64>> {
+        Ray {
+            origin: self.top_right(),
+            dir: Vector2::new(self.dx, self.dy),
+        }
+    }
+
+    pub fn bottom_left_ray(&self) -> Ray<Point2<f64>> {
+        Ray {
+            origin: self.bottom_left(),
+            dir: Vector2::new(self.dx, self.dy),
+        }
+    }
+
+    pub fn bottom_right_ray(&self) -> Ray<Point2<f64>> {
+        Ray {
+            origin: self.bottom_right(),
+            dir: Vector2::new(self.dx, self.dy),
+        }
+    }
+
+    // pub fn increase_frames(&mut self) {
+    //     let (new_count, overflow) = self.frames.overflowing_add(1);
+    //     if ! overflow {
+    //         self.frames = new_count;
+    //     } else {
+    //         self.frames = 10;
+    //     }
+    // }
 
     pub fn update_position(&mut self, dt: f64) {
         let new_ball_x = self.center.x + self.dx * dt * (self.speed as f64 - 4.0);
@@ -58,16 +87,6 @@ impl Ball {
 }
 
 impl Hitbox for Ball {
-    // fn hitbox(&self) -> AABB<Point2<f64>> {
-    //     let ball_top_left = Point2::new(self.ball.top() as f64, self.ball.left() as f64);
-    //     let ball_bottom_right = Point2::new(self.ball.bottom() as f64, self.ball.right() as f64);
-    //     let ball_hitbox = AABB::new(ball_top_left, ball_bottom_right);
-    //     AABB::new(
-    //         Point2::new(self.top(), self.left()),
-    //         Point2::new(self.bottom(), self.right()),
-    //     )
-    // }
-
     fn top(&self) -> i32 {
         (self.center.y - self.size() as f64 / 2.0) as i32
     }

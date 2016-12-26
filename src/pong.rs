@@ -1,8 +1,12 @@
 extern crate piston_window;
 use piston_window::*;
 
+extern crate nalgebra;
 use ncollide_geometry::bounding_volume::AABB;
 use ncollide_geometry::bounding_volume::BoundingVolume;
+use ncollide_geometry::shape::Segment;
+use ncollide_geometry::query::RayCast;
+use ncollide_geometry::query::ray_internal::Ray;
 
 extern crate opengl_graphics;
 use opengl_graphics::GlGraphics;
@@ -10,7 +14,7 @@ use opengl_graphics::GlGraphics;
 use paddle::Paddle;
 use ball::Ball;
 use hitbox::Hitbox;
-use nalgebra::Point2;
+use nalgebra::{Point2, Vector2};
 
 const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
@@ -19,6 +23,10 @@ pub struct Pong {
     state: GameState,
     lastpoint: Option<Player>,
     ball: Ball,
+    left_wall: Segment<Point2<f64>>,
+    right_wall: Segment<Point2<f64>>,
+    top_wall: Segment<Point2<f64>>,
+    bottom_wall: Segment<Point2<f64>>,
     screen_width: u32,
     screen_height: u32,
     p1_paddle: Paddle,
@@ -40,6 +48,22 @@ impl Pong {
             ball: Ball::new(w as f64, h as f64),
             screen_width: w,
             screen_height: h,
+            left_wall: Segment::new(
+                Point2::new(0.0, 0.0),
+                Point2::new(0.0, h as f64),
+            ),
+            right_wall: Segment::new(
+                Point2::new(w as f64, 0.0),
+                Point2::new(w as f64, h as f64),
+            ),
+            top_wall: Segment::new(
+                Point2::new(0.0, 0.0),
+                Point2::new(w as f64, 0.0),
+            ),
+            bottom_wall: Segment::new(
+                Point2::new(0.0, h as f64),
+                Point2::new(w as f64, h as f64),
+            ),
             p1_paddle: Paddle::new(p1_point),
             p2_paddle: Paddle::new(p2_point),
             p1_score: 0,
@@ -100,8 +124,7 @@ impl Pong {
     pub fn update(&mut self, args: &UpdateArgs) {
         match self.state {
             GameState::Unstarted => {
-                // Make the game play itself for easier testing
-                self.start();
+                // self.start();
             },
             GameState::Started => {
                 self.ball.update_position(args.dt);
@@ -111,35 +134,119 @@ impl Pong {
                 let p2_paddle_hitbox = self.p2_paddle.aabb();
 
                 // See if the ball hits a wall
-                if self.ball.top() <= 0 || self.ball.bottom() >= self.screen_height as i32 {
-                    self.ball.dy *= -1.0;
+                let ball_top_right_ray = Ray {
+                    origin: self.ball.top_right(),
+                    dir: Vector2::new(self.ball.dx, self.ball.dy),
+                };
+
+                let ball_top_left_ray = Ray {
+                    origin: self.ball.top_left(),
+                    dir: Vector2::new(self.ball.dx, self.ball.dy),
+                };
+
+                let ball_bottom_right_ray = Ray {
+                    origin: self.ball.bottom_right(),
+                    dir: Vector2::new(self.ball.dx, self.ball.dy),
+                };
+
+                let ball_bottom_left_ray = Ray {
+                    origin: self.ball.bottom_left(),
+                    dir: Vector2::new(self.ball.dx, self.ball.dy),
+                };
+
+                // Check for collision with top wall
+                if let Some(scalar) =
+                    self.top_wall.toi_with_ray(
+                        &nalgebra::Identity::new(),
+                        &ball_top_left_ray,
+                        true,
+                    ) {
+                        if scalar - 0.005 <= 0.0 {
+                            self.ball.dy *= -1.0;
+                        }
+                } else if let Some(scalar) =
+                    self.top_wall.toi_with_ray(
+                        &nalgebra::Identity::new(),
+                        &ball_top_right_ray,
+                        true,
+                    ) {
+                        if scalar - 0.005 <= 0.0 {
+                            self.ball.dy *= -1.0;
+                        }
                 }
 
-                self.ball.increase_frames();
+                // Check for collision with bottom wall
+                if let Some(scalar) =
+                    self.bottom_wall.toi_with_ray(
+                        &nalgebra::Identity::new(),
+                        &ball_bottom_left_ray,
+                        true,
+                    ) {
+                        if scalar - 0.005 <= 0.0 {
+                            self.ball.dy *= -1.0;
+                        }
+                } else if let Some(scalar) =
+                    self.bottom_wall.toi_with_ray(
+                        &nalgebra::Identity::new(),
+                        &ball_bottom_right_ray,
+                        true,
+                    ) {
+                        if scalar - 0.005 <= 0.0 {
+                            self.ball.dy *= -1.0;
+                        }
+                }
 
-                // See if the ball hits p1's paddle
-                if self.ball.frames > 5 {
-                    if ball_hitbox.intersects(&p1_paddle_hitbox)
-                        && self.ball.center.x > self.p1_paddle.center.x {
-                            self.ball.frames = 0;
+                // Check for collision with left paddle
+                if let Some(scalar) =
+                    p1_paddle_hitbox.toi_with_ray(
+                        &nalgebra::Identity::new(),
+                        &ball_top_left_ray,
+                        true,
+                    ) {
+                        if scalar - 0.005 <= 0.0 {
+                            self.ball.center.x += 1.0;
                             self.ball.dx *= -1.0;
-                            self.ball.speed = self.ball.speed.saturating_add(1);
-                    }
-                }
-
-                // See if the ball hits p2's paddle
-                if self.ball.frames > 5 {
-                    if ball_hitbox.intersects(&p2_paddle_hitbox)
-                        && self.ball.center.x < self.p2_paddle.center.x {
-                            self.ball.frames = 0;
+                        }
+                } else if let Some(scalar) =
+                    p1_paddle_hitbox.toi_with_ray(
+                        &nalgebra::Identity::new(),
+                        &ball_bottom_left_ray,
+                        true,
+                    ) {
+                        if scalar - 0.005 <= 0.0 {
+                            self.ball.center.x += 1.0;
                             self.ball.dx *= -1.0;
-                            self.ball.speed = self.ball.speed.saturating_add(1);
-                    }
+                        }
                 }
 
-                // Make the game play itself for easier testing
-                self.p1_paddle.set_location(self.ball.center.y as i32);
-                self.p2_paddle.set_location(self.ball.center.y as i32);
+                // Check for collision with right paddle
+                if let Some(scalar) =
+                    p2_paddle_hitbox.toi_with_ray(
+                        &nalgebra::Identity::new(),
+                        &ball_top_right_ray,
+                        true,
+                    ) {
+                        if scalar - 0.005 <= 0.0 {
+                            self.ball.center.x -= 1.0;
+                            self.ball.dx *= -1.0;
+                        }
+                } else if let Some(scalar) =
+                    p2_paddle_hitbox.toi_with_ray(
+                        &nalgebra::Identity::new(),
+                        &ball_bottom_right_ray,
+                        true,
+                    ) {
+                        if scalar - 0.005 <= 0.0 {
+                            self.ball.center.x -= 1.0;
+                            self.ball.dx *= -1.0;
+                        }
+                }
+
+                if self.ball.center.y < self.p2_paddle.center.y {
+                    self.p2_paddle.center.y -= 1.5;
+                } else if self.ball.center.y > self.p2_paddle.center.y {
+                    self.p2_paddle.center.y += 1.5;
+                }
 
                 // Check for a win
                 // if self.p1_score == 10 {
@@ -219,13 +326,13 @@ impl Pong {
 
                         if center_to_top as f64 > 0.0 && center_to_bottom < self.screen_height as f64 {
                             self.p1_paddle.set_location(y as i32);
-                            self.p2_paddle.set_location(y as i32);
+                            // self.p2_paddle.set_location(y as i32);
                         } else if y > 0.0 && y < half_paddle {
                             self.p1_paddle.set_location(half_paddle as i32);
-                            self.p2_paddle.set_location(half_paddle as i32);
+                            // self.p2_paddle.set_location(half_paddle as i32);
                         } else if y < self.screen_height as f64 && y > self.screen_height as f64 - half_paddle {
                             self.p1_paddle.set_location((self.screen_height as f64 - half_paddle) as i32);
-                            self.p2_paddle.set_location((self.screen_height as f64 - half_paddle) as i32);
+                            // self.p2_paddle.set_location((self.screen_height as f64 - half_paddle) as i32);
                         }
                     },
                     _ => {},
@@ -261,6 +368,24 @@ impl Pong {
                 format!("Pong: Player 2 wins")
             },
         }
+    }
+}
+
+impl Hitbox for Pong {
+    fn top(&self) -> i32 {
+        0
+    }
+
+    fn bottom(&self) -> i32 {
+        self.screen_height as i32
+    }
+
+    fn left(&self) -> i32 {
+        0
+    }
+
+    fn right(&self) -> i32 {
+        self.screen_width as i32
     }
 }
 
