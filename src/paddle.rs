@@ -1,3 +1,4 @@
+use hitbox::Hitbox;
 use nalgebra::Point2;
 
 pub struct Paddle {
@@ -22,22 +23,6 @@ impl Paddle {
         self.center = Point2::new(self.center.x, y as f64);
     }
 
-    pub fn top(&self) -> i32 {
-        (self.center.y - self.height() as f64 / 2.0) as i32
-    }
-
-    pub fn bottom(&self) -> i32 {
-        (self.center.y + self.height() as f64 / 2.0) as i32
-    }
-
-    pub fn left(&self) -> i32 {
-        (self.center.x - self.width() as f64 / 2.0) as i32
-    }
-
-    pub fn right(&self) -> i32 {
-        (self.center.x + self.width() as f64 / 2.0) as i32
-    }
-
     // pub fn center(&self) -> Point2<f64> {
     //     self.center
     // }
@@ -48,5 +33,23 @@ impl Paddle {
 
     pub fn height(&self) -> u32 {
         self.height
+    }
+}
+
+impl Hitbox for Paddle {
+    fn top(&self) -> i32 {
+        (self.center.y - self.height() as f64 / 2.0) as i32
+    }
+
+    fn bottom(&self) -> i32 {
+        (self.center.y + self.height() as f64 / 2.0) as i32
+    }
+
+    fn left(&self) -> i32 {
+        (self.center.x - self.width() as f64 / 2.0) as i32
+    }
+
+    fn right(&self) -> i32 {
+        (self.center.x + self.width() as f64 / 2.0) as i32
     }
 }

@@ -9,6 +9,7 @@ use opengl_graphics::GlGraphics;
 
 use paddle::Paddle;
 use ball::Ball;
+use hitbox::Hitbox;
 use nalgebra::Point2;
 
 const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
@@ -105,20 +106,9 @@ impl Pong {
             GameState::Started => {
                 self.ball.update_position(args.dt);
 
-                // Update the ball's hitbox
-                let ball_top_left = Point2::new(self.ball.top() as f64, self.ball.left() as f64);
-                let ball_bottom_right = Point2::new(self.ball.bottom() as f64, self.ball.right() as f64);
-                let ball_hitbox = AABB::new(ball_top_left, ball_bottom_right);
-
-                // Update p1 paddle hitbox
-                let p1_paddle_top_left = Point2::new(self.p1_paddle.top() as f64, self.p1_paddle.left() as f64);
-                let p1_paddle_bottom_right = Point2::new(self.p1_paddle.bottom() as f64, self.p1_paddle.right() as f64);
-                let p1_paddle_hitbox = AABB::new(p1_paddle_top_left, p1_paddle_bottom_right);
-
-                // Update p2 paddle hitbox
-                let p2_paddle_top_left = Point2::new(self.p2_paddle.top() as f64, self.p2_paddle.left() as f64);
-                let p2_paddle_bottom_right = Point2::new(self.p2_paddle.bottom() as f64, self.p2_paddle.right() as f64);
-                let p2_paddle_hitbox = AABB::new(p2_paddle_top_left, p2_paddle_bottom_right);
+                let ball_hitbox = self.ball.aabb();
+                let p1_paddle_hitbox = self.p1_paddle.aabb();
+                let p2_paddle_hitbox = self.p2_paddle.aabb();
 
                 // See if the ball hits a wall
                 if self.ball.top() <= 0 || self.ball.bottom() >= self.screen_height as i32 {
@@ -133,7 +123,7 @@ impl Pong {
                         && self.ball.center.x > self.p1_paddle.center.x {
                             self.ball.frames = 0;
                             self.ball.dx *= -1.0;
-                            self.ball.increase_speed();
+                            self.ball.speed = self.ball.speed.saturating_add(1);
                     }
                 }
 
@@ -143,7 +133,7 @@ impl Pong {
                         && self.ball.center.x < self.p2_paddle.center.x {
                             self.ball.frames = 0;
                             self.ball.dx *= -1.0;
-                            self.ball.increase_speed();
+                            self.ball.speed = self.ball.speed.saturating_add(1);
                     }
                 }
 

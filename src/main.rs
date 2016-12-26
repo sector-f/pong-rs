@@ -17,6 +17,7 @@ mod pong;
 use pong::Pong;
 mod paddle;
 mod ball;
+mod hitbox;
 
 fn main() {
     let opengl = OpenGL::V3_2;
