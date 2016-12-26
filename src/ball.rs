@@ -50,20 +50,20 @@ impl Ball {
         // self.dy += 50.0;
     }
 
-    pub fn top(&self) -> u32 {
-        (self.center.y - self.size() as f64 / 2.0) as u32
+    pub fn top(&self) -> i32 {
+        (self.center.y - self.size() as f64 / 2.0) as i32
     }
 
-    pub fn bottom(&self) -> u32 {
-        (self.center.y + self.size() as f64 / 2.0) as u32
+    pub fn bottom(&self) -> i32 {
+        (self.center.y + self.size() as f64 / 2.0) as i32
     }
 
-    pub fn left(&self) -> u32 {
-        (self.center.x - self.size() as f64 / 2.0) as u32
+    pub fn left(&self) -> i32 {
+        (self.center.x - self.size() as f64 / 2.0) as i32
     }
 
-    pub fn right(&self) -> u32 {
-        (self.center.x + self.size() as f64 / 2.0) as u32
+    pub fn right(&self) -> i32 {
+        (self.center.x + self.size() as f64 / 2.0) as i32
     }
 
     // pub fn status(&self) -> BallStatus {

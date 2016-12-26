@@ -18,24 +18,24 @@ impl Paddle {
         }
     }
 
-    pub fn set_location(&mut self, y: u32) {
+    pub fn set_location(&mut self, y: i32) {
         self.center = Point2::new(self.center.x, y as f64);
     }
 
-    pub fn top(&self) -> u32 {
-        (self.center.y - self.height() as f64 / 2.0) as u32
+    pub fn top(&self) -> i32 {
+        (self.center.y - self.height() as f64 / 2.0) as i32
     }
 
-    pub fn bottom(&self) -> u32 {
-        (self.center.y + self.height() as f64 / 2.0) as u32
+    pub fn bottom(&self) -> i32 {
+        (self.center.y + self.height() as f64 / 2.0) as i32
     }
 
-    pub fn left(&self) -> u32 {
-        (self.center.x - self.width() as f64 / 2.0) as u32
+    pub fn left(&self) -> i32 {
+        (self.center.x - self.width() as f64 / 2.0) as i32
     }
 
-    pub fn right(&self) -> u32 {
-        (self.center.x + self.width() as f64 / 2.0) as u32
+    pub fn right(&self) -> i32 {
+        (self.center.x + self.width() as f64 / 2.0) as i32
     }
 
     // pub fn center(&self) -> Point2<f64> {

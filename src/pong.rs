@@ -18,7 +18,6 @@ pub struct Pong {
     state: GameState,
     lastpoint: Option<Player>,
     ball: Ball,
-    // paddle_gap: u32,
     screen_width: u32,
     screen_height: u32,
     p1_paddle: Paddle,
@@ -38,7 +37,6 @@ impl Pong {
             state: GameState::Unstarted,
             lastpoint: None,
             ball: Ball::new(w as f64, h as f64),
-            // paddle_gap: paddle_gap,
             screen_width: w,
             screen_height: h,
             p1_paddle: Paddle::new(p1_point),
@@ -123,7 +121,7 @@ impl Pong {
                 let p2_paddle_hitbox = AABB::new(p2_paddle_top_left, p2_paddle_bottom_right);
 
                 // See if the ball hits a wall
-                if self.ball.top() == 0 || self.ball.bottom() >= self.screen_height {
+                if self.ball.top() <= 0 || self.ball.bottom() >= self.screen_height as i32 {
                     self.ball.dy *= -1.0;
                 }
 
@@ -150,8 +148,8 @@ impl Pong {
                 }
 
                 // Make the game play itself for easier testing
-                self.p1_paddle.set_location(self.ball.center.y as u32);
-                self.p2_paddle.set_location(self.ball.center.y as u32);
+                self.p1_paddle.set_location(self.ball.center.y as i32);
+                self.p2_paddle.set_location(self.ball.center.y as i32);
 
                 // Check for a win
                 // if self.p1_score == 10 {
@@ -165,7 +163,7 @@ impl Pong {
                     self.p2_score += 1;
                     self.lastpoint = Some(Player::P2);
                     self.start();
-                } else if self.ball.right() >= self.screen_width {
+                } else if self.ball.right() >= self.screen_width as i32 {
                     self.p1_score += 1;
                     self.lastpoint = Some(Player::P1);
                     self.start();
@@ -230,14 +228,14 @@ impl Pong {
                         let center_to_bottom = y + half_paddle;
 
                         if center_to_top as f64 > 0.0 && center_to_bottom < self.screen_height as f64 {
-                            self.p1_paddle.set_location(y as u32);
-                            self.p2_paddle.set_location(y as u32);
+                            self.p1_paddle.set_location(y as i32);
+                            self.p2_paddle.set_location(y as i32);
                         } else if y > 0.0 && y < half_paddle {
-                            self.p1_paddle.set_location(half_paddle as u32);
-                            self.p2_paddle.set_location(half_paddle as u32);
+                            self.p1_paddle.set_location(half_paddle as i32);
+                            self.p2_paddle.set_location(half_paddle as i32);
                         } else if y < self.screen_height as f64 && y > self.screen_height as f64 - half_paddle {
-                            self.p1_paddle.set_location((self.screen_height as f64 - half_paddle) as u32);
-                            self.p2_paddle.set_location((self.screen_height as f64 - half_paddle) as u32);
+                            self.p1_paddle.set_location((self.screen_height as f64 - half_paddle) as i32);
+                            self.p2_paddle.set_location((self.screen_height as f64 - half_paddle) as i32);
                         }
                     },
                     _ => {},
