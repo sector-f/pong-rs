@@ -271,9 +271,13 @@ impl Pong {
                 let diff = self.ball.center.y - self.p2_paddle.center.y;
                 let dy = f64::min(diff.abs(), (3.5));
                 if self.ball.center.y < self.p2_paddle.center.y - 0.1 {
-                    self.p2_paddle.center.y -= dy;
+                    if self.p2_paddle.center.y - (self.p1_paddle.height() as f64 / 2.0) > 0.0 {
+                        self.p2_paddle.center.y -= dy;
+                    }
                 } else if self.ball.center.y > self.p2_paddle.center.y + 0.1 {
-                    self.p2_paddle.center.y += dy;
+                    if self.p2_paddle.center.y + (self.p1_paddle.height() as f64 / 2.0) < self.screen_height as f64 {
+                        self.p2_paddle.center.y += dy;
+                    }
                 }
 
                 // Check for a win
@@ -307,24 +311,6 @@ impl Pong {
     pub fn input(&mut self, input: &Input) {
         match self.state {
             GameState::Unstarted => {
-                match input {
-                    &Input::Release(button) => {
-                        match button {
-                            Button::Keyboard(key) => {
-                                match key {
-                                    Key::Space => {
-                                        self.start();
-                                    },
-                                    _ => {},
-                                }
-                            },
-                            _ => {},
-                        }
-                    },
-                    _ => {},
-                }
-            },
-            GameState::Started => {
                 match input {
                     &Input::Release(button) => {
                         match button {
