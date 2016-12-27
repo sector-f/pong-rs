@@ -291,8 +291,10 @@ impl Pong {
 
                 // Check for a win
                 if self.p1_score == 10 {
+                    self.ball.visible = false;
                     self.state = GameState::P1Win;
                 } else if self.p2_score == 10 {
+                    self.ball.visible = false;
                     self.state = GameState::P2Win;
                 }
 
