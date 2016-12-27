@@ -200,6 +200,15 @@ impl Pong {
                         }
                 }
 
+                // To hopefully solve any remaining issues
+                if self.ball.top() < 0 {
+                    self.ball.center.y =
+                        0.0 + self.ball.size as f64 / 2.0;
+                } else if self.ball.bottom() > self.screen_height as i32 {
+                    self.ball.center.y =
+                        self.screen_height as f64 - self.ball.size as f64 / 2.0;
+                }
+
                 // Check for collision with left paddle
                 let pi = f64::consts::PI;
                 if let Some(scalar) =

@@ -8,7 +8,7 @@ pub struct Ball {
     pub center: Point2<f64>,
     // status: BallStatus,
     pub visible: bool,
-    size: u32,
+    pub size: u32,
     pub dx: f64,
     pub dy: f64,
     pub speed: u32,
