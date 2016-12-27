@@ -278,7 +278,7 @@ impl Pong {
 
                 // Paddle 2 AI
                 let diff = self.ball.center.y - self.p2_paddle.center.y;
-                let dy = f64::min(diff.abs(), (3.5));
+                let dy = f64::min(diff.abs(), (4.0));
                 if self.ball.center.y < self.p2_paddle.center.y - 0.1 {
                     if self.p2_paddle.center.y - (self.p1_paddle.height() as f64 / 2.0) > 0.0 {
                         self.p2_paddle.center.y -= dy;
@@ -310,9 +310,19 @@ impl Pong {
             },
             GameState::P1Win => {
                 self.ball.visible = false;
+                if self.p2_paddle.center.y > (self.screen_height as f64 / 2.0) + 0.1 {
+                    self.p2_paddle.center.y -= 1.0;
+                } else if self.p2_paddle.center.y < (self.screen_height as f64 / 2.0) - 0.1 {
+                    self.p2_paddle.center.y += 1.0;
+                }
             },
             GameState::P2Win => {
                 self.ball.visible = false;
+                if self.p2_paddle.center.y > self.screen_height as f64 / 2.0 {
+                    self.p2_paddle.center.y -= 1.0;
+                } else if self.p2_paddle.center.y < self.screen_height as f64 / 2.0 {
+                    self.p2_paddle.center.y += 1.0;
+                }
             },
         }
     }
