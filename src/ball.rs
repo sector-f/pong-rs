@@ -1,6 +1,7 @@
-use ncollide_geometry::bounding_volume::AABB;
-use ncollide_geometry::query::ray_internal::Ray;
-use nalgebra::{Point2, Vector2};
+// use ncollide_geometry::bounding_volume::AABB;
+// use ncollide_geometry::query::ray_internal::Ray;
+// use nalgebra::{Point2, Vector2};
+use nalgebra::Point2;
 use hitbox::Hitbox;
 
 pub struct Ball {
@@ -30,33 +31,33 @@ impl Ball {
         }
     }
 
-    pub fn top_left_ray(&self) -> Ray<Point2<f64>> {
-        Ray {
-            origin: self.top_left(),
-            dir: Vector2::new(self.dx, self.dy),
-        }
-    }
+    // pub fn top_left_ray(&self) -> Ray<Point2<f64>> {
+    //     Ray {
+    //         origin: self.top_left(),
+    //         dir: Vector2::new(self.dx, self.dy),
+    //     }
+    // }
 
-    pub fn top_right_ray(&self) -> Ray<Point2<f64>> {
-        Ray {
-            origin: self.top_right(),
-            dir: Vector2::new(self.dx, self.dy),
-        }
-    }
+    // pub fn top_right_ray(&self) -> Ray<Point2<f64>> {
+    //     Ray {
+    //         origin: self.top_right(),
+    //         dir: Vector2::new(self.dx, self.dy),
+    //     }
+    // }
 
-    pub fn bottom_left_ray(&self) -> Ray<Point2<f64>> {
-        Ray {
-            origin: self.bottom_left(),
-            dir: Vector2::new(self.dx, self.dy),
-        }
-    }
+    // pub fn bottom_left_ray(&self) -> Ray<Point2<f64>> {
+    //     Ray {
+    //         origin: self.bottom_left(),
+    //         dir: Vector2::new(self.dx, self.dy),
+    //     }
+    // }
 
-    pub fn bottom_right_ray(&self) -> Ray<Point2<f64>> {
-        Ray {
-            origin: self.bottom_right(),
-            dir: Vector2::new(self.dx, self.dy),
-        }
-    }
+    // pub fn bottom_right_ray(&self) -> Ray<Point2<f64>> {
+    //     Ray {
+    //         origin: self.bottom_right(),
+    //         dir: Vector2::new(self.dx, self.dy),
+    //     }
+    // }
 
     // pub fn increase_frames(&mut self) {
     //     let (new_count, overflow) = self.frames.overflowing_add(1);
@@ -67,11 +68,11 @@ impl Ball {
     //     }
     // }
 
-    pub fn update_position(&mut self, dt: f64) {
-        let new_ball_x = self.center.x + self.dx * dt * (self.speed as f64 - 4.0);
-        let new_ball_y = self.center.y + self.dy * dt * (self.speed as f64 - 4.0);
-        self.center = Point2::new(new_ball_x, new_ball_y);
-    }
+    // pub fn update_position(&mut self, dt: f64) {
+    //     let new_ball_x = self.center.x + self.dx * dt;
+    //     let new_ball_y = self.center.y + self.dy * dt;
+    //     self.center = Point2::new(new_ball_x, new_ball_y);
+    // }
 
     // pub fn status(&self) -> BallStatus {
     //     self.status

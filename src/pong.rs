@@ -1,9 +1,12 @@
+extern crate rand;
+use pong::rand::Rng;
+
 extern crate piston_window;
 use piston_window::*;
 
 extern crate nalgebra;
-use ncollide_geometry::bounding_volume::AABB;
-use ncollide_geometry::bounding_volume::BoundingVolume;
+// use ncollide_geometry::bounding_volume::AABB;
+// use ncollide_geometry::bounding_volume::BoundingVolume;
 use ncollide_geometry::shape::Segment;
 use ncollide_geometry::query::RayCast;
 use ncollide_geometry::query::ray_internal::Ray;
@@ -15,6 +18,8 @@ use paddle::Paddle;
 use ball::Ball;
 use hitbox::Hitbox;
 use nalgebra::{Point2, Vector2};
+
+use std::f64;
 
 const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
@@ -124,16 +129,15 @@ impl Pong {
     pub fn update(&mut self, args: &UpdateArgs) {
         match self.state {
             GameState::Unstarted => {
-                // self.start();
             },
             GameState::Started => {
-                self.ball.update_position(args.dt);
+                self.ball.center.x += self.ball.dx * args.dt;
+                self.ball.center.y += self.ball.dy * args.dt;
 
-                let ball_hitbox = self.ball.aabb();
                 let p1_paddle_hitbox = self.p1_paddle.aabb();
                 let p2_paddle_hitbox = self.p2_paddle.aabb();
 
-                // See if the ball hits a wall
+                // Collision detection
                 let ball_top_right_ray = Ray {
                     origin: self.ball.top_right(),
                     dir: Vector2::new(self.ball.dx, self.ball.dy),
@@ -161,7 +165,7 @@ impl Pong {
                         &ball_top_left_ray,
                         true,
                     ) {
-                        if scalar - 0.005 <= 0.0 {
+                        if scalar - 0.025 <= 0.0 {
                             self.ball.dy *= -1.0;
                         }
                 } else if let Some(scalar) =
@@ -170,7 +174,7 @@ impl Pong {
                         &ball_top_right_ray,
                         true,
                     ) {
-                        if scalar - 0.005 <= 0.0 {
+                        if scalar - 0.025 <= 0.0 {
                             self.ball.dy *= -1.0;
                         }
                 }
@@ -182,7 +186,7 @@ impl Pong {
                         &ball_bottom_left_ray,
                         true,
                     ) {
-                        if scalar - 0.005 <= 0.0 {
+                        if scalar - 0.025 <= 0.0 {
                             self.ball.dy *= -1.0;
                         }
                 } else if let Some(scalar) =
@@ -191,12 +195,13 @@ impl Pong {
                         &ball_bottom_right_ray,
                         true,
                     ) {
-                        if scalar - 0.005 <= 0.0 {
+                        if scalar - 0.025 <= 0.0 {
                             self.ball.dy *= -1.0;
                         }
                 }
 
                 // Check for collision with left paddle
+                let pi = f64::consts::PI;
                 if let Some(scalar) =
                     p1_paddle_hitbox.toi_with_ray(
                         &nalgebra::Identity::new(),
@@ -204,8 +209,13 @@ impl Pong {
                         true,
                     ) {
                         if scalar - 0.005 <= 0.0 {
-                            self.ball.center.x += 1.0;
-                            self.ball.dx *= -1.0;
+                            let offset =
+                                (self.p1_paddle.center.y - self.ball.center.y)
+                                / (self.p1_paddle.height() as f64 / 2.0);
+                            let angle = offset * (pi / 3.0);
+                            self.ball.speed += 50;
+                            self.ball.dx = self.ball.speed as f64 * angle.cos();
+                            self.ball.dy = self.ball.speed as f64 * -angle.sin();
                         }
                 } else if let Some(scalar) =
                     p1_paddle_hitbox.toi_with_ray(
@@ -214,8 +224,13 @@ impl Pong {
                         true,
                     ) {
                         if scalar - 0.005 <= 0.0 {
-                            self.ball.center.x += 1.0;
-                            self.ball.dx *= -1.0;
+                            let offset =
+                                (self.p1_paddle.center.y - self.ball.center.y)
+                                / (self.p1_paddle.height() as f64 / 2.0);
+                            let angle = offset * (pi / 3.0);
+                            self.ball.speed += 50;
+                            self.ball.dx = self.ball.speed as f64 * angle.cos();
+                            self.ball.dy = self.ball.speed as f64 * -angle.sin();
                         }
                 }
 
@@ -227,8 +242,13 @@ impl Pong {
                         true,
                     ) {
                         if scalar - 0.005 <= 0.0 {
-                            self.ball.center.x -= 1.0;
-                            self.ball.dx *= -1.0;
+                            let offset =
+                                (self.p2_paddle.center.y - self.ball.center.y)
+                                / (self.p2_paddle.height() as f64 / 2.0);
+                            let angle = offset * (pi / 3.0);
+                            self.ball.speed += 50;
+                            self.ball.dx = self.ball.speed as f64 * -angle.cos();
+                            self.ball.dy = self.ball.speed as f64 * angle.sin();
                         }
                 } else if let Some(scalar) =
                     p2_paddle_hitbox.toi_with_ray(
@@ -237,25 +257,34 @@ impl Pong {
                         true,
                     ) {
                         if scalar - 0.005 <= 0.0 {
-                            self.ball.center.x -= 1.0;
-                            self.ball.dx *= -1.0;
+                            let offset =
+                                (self.p2_paddle.center.y - self.ball.center.y)
+                                / (self.p2_paddle.height() as f64 / 2.0);
+                            let angle = offset * (pi / 3.0);
+                            self.ball.speed += 50;
+                            self.ball.dx = self.ball.speed as f64 * -angle.cos();
+                            self.ball.dy = self.ball.speed as f64 * angle.sin();
                         }
                 }
 
-                if self.ball.center.y < self.p2_paddle.center.y {
-                    self.p2_paddle.center.y -= 1.5;
-                } else if self.ball.center.y > self.p2_paddle.center.y {
-                    self.p2_paddle.center.y += 1.5;
+                // Paddle 2 AI
+                let diff = self.ball.center.y - self.p2_paddle.center.y;
+                let dy = f64::min(diff.abs(), (3.5));
+                if self.ball.center.y < self.p2_paddle.center.y - 0.1 {
+                    self.p2_paddle.center.y -= dy;
+                } else if self.ball.center.y > self.p2_paddle.center.y + 0.1 {
+                    self.p2_paddle.center.y += dy;
                 }
 
                 // Check for a win
-                // if self.p1_score == 10 {
-                //     self.state = GameState::P1Win;
-                // } else if self.p2_score == 10 {
-                //     self.state = GameState::P2Win;
-                // }
+                if self.p1_score == 10 {
+                    self.state = GameState::P1Win;
+                } else if self.p2_score == 10 {
+                    self.state = GameState::P2Win;
+                }
 
                 // See if either player scores
+                // Maybe replace this with raycasting later
                 if self.ball.left() <= 0 {
                     self.p2_score += 1;
                     self.lastpoint = Some(Player::P2);
@@ -326,13 +355,10 @@ impl Pong {
 
                         if center_to_top as f64 > 0.0 && center_to_bottom < self.screen_height as f64 {
                             self.p1_paddle.set_location(y as i32);
-                            // self.p2_paddle.set_location(y as i32);
                         } else if y > 0.0 && y < half_paddle {
                             self.p1_paddle.set_location(half_paddle as i32);
-                            // self.p2_paddle.set_location(half_paddle as i32);
                         } else if y < self.screen_height as f64 && y > self.screen_height as f64 - half_paddle {
                             self.p1_paddle.set_location((self.screen_height as f64 - half_paddle) as i32);
-                            // self.p2_paddle.set_location((self.screen_height as f64 - half_paddle) as i32);
                         }
                     },
                     _ => {},
@@ -348,9 +374,23 @@ impl Pong {
             self.screen_width as f64 / 2.0,
             self.screen_height as f64 / 2.0
         );
-        self.ball.speed = 5;
-        self.ball.dx = 50.0 * self.ball.speed as f64;
-        self.ball.dy = 50.0 * self.ball.speed as f64;
+        self.ball.speed = 400;
+        match self.lastpoint {
+            Some(ref player) => {
+                match player {
+                    &Player::P1 => {
+                        self.ball.dx = -1.0 * self.ball.speed as f64;
+                    },
+                    &Player::P2 => {
+                        self.ball.dx = self.ball.speed as f64;
+                    },
+                }
+            },
+            None => {
+                self.ball.dx = self.ball.speed as f64;
+            },
+        }
+        self.ball.dy = rand::thread_rng().gen_range::<i32>(-350, 351) as f64;
     }
 
     pub fn title(&self) -> String {

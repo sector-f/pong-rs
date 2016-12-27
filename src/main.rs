@@ -37,7 +37,6 @@ fn main() {
     );
 
     let mut gl = GlGraphics::new(opengl);
-
     let mut events = window.events();
     while let Some(e) = events.next(&mut window) {
         match e {
