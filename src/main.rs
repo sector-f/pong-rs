@@ -13,11 +13,14 @@ use opengl_graphics::GlGraphics;
 extern crate sdl2_window;
 use sdl2_window::Sdl2Window;
 
+pub extern crate rand;
+
 mod pong;
 use pong::Pong;
 mod paddle;
 mod ball;
 mod hitbox;
+mod player;
 
 fn main() {
     let opengl = OpenGL::V3_2;

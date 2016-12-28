@@ -1,4 +1,4 @@
-extern crate rand;
+pub extern crate rand;
 use pong::rand::Rng;
 
 extern crate piston_window;
@@ -14,6 +14,7 @@ use ncollide_geometry::query::ray_internal::Ray;
 extern crate opengl_graphics;
 use opengl_graphics::GlGraphics;
 
+use player::*;
 use paddle::Paddle;
 use ball::Ball;
 use hitbox::Hitbox;
@@ -26,7 +27,7 @@ const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 pub struct Pong {
     state: GameState,
-    lastpoint: Option<Player>,
+    prevpoint: Option<PlayerNum>,
     ball: Ball,
     // left_wall: Segment<Point2<f64>>,
     // right_wall: Segment<Point2<f64>>,
@@ -34,22 +35,49 @@ pub struct Pong {
     bottom_wall: Segment<Point2<f64>>,
     screen_width: u32,
     screen_height: u32,
-    p1_paddle: Paddle,
-    p2_paddle: Paddle,
-    p1_score: u8,
-    p2_score: u8,
+    p1: Player,
+    p2: Player,
+    mouse_pos: Option<f64>,
+    max_score: u32,
 }
 
 impl Pong {
     pub fn new(w: u32, h: u32) -> Self {
         let paddle_gap = 30;
 
-        let p1_point = Point2::new(paddle_gap as f64, h as f64/2f64);
-        let p2_point = Point2::new(w as f64 - paddle_gap as f64, h as f64/2f64);
+        let p1_point = Point2::new(paddle_gap as f64, h as f64 / 2.0);
+        let p2_point = Point2::new(w as f64 - paddle_gap as f64, h as f64 / 2.0);
+
+        let player1 = Player {
+                number: PlayerNum::P1,
+                paddle: Paddle::new(p1_point),
+                playertype: PlayerType::Human(InputMethod::Mouse),
+                score: 0,
+        };
+
+        // let p1_paddle = Paddle::new(p1_point);
+        // let p1_paddle_height = p1_paddle.height();
+
+        let p2_paddle = Paddle::new(p2_point);
+        let p2_paddle_height = p2_paddle.height();
+
+        // let player1 = Player {
+        //         number: PlayerNum::P1,
+        //         paddle: p1_paddle,
+        //         playertype: PlayerType::CPU(AI::new(p1_paddle_height, 4.0)),
+        //         score: 0,
+        // };
+
+        let player2 = Player {
+                number: PlayerNum::P2,
+                paddle: p2_paddle,
+                playertype: PlayerType::CPU(AI::new(p2_paddle_height, 3.0)),
+                score: 0,
+        };
 
         Pong {
             state: GameState::Unstarted,
-            lastpoint: None,
+            prevpoint: None,
             ball: Ball::new(w as f64, h as f64),
             screen_width: w,
             screen_height: h,
@@ -69,10 +97,10 @@ impl Pong {
                 Point2::new(0.0, h as f64),
                 Point2::new(w as f64, h as f64),
             ),
-            p1_paddle: Paddle::new(p1_point),
-            p2_paddle: Paddle::new(p2_point),
-            p1_score: 0,
-            p2_score: 0,
+            p1: player1,
+            p2: player2,
+            mouse_pos: None,
+            max_score: 10,
         }
     }
 
@@ -102,10 +130,10 @@ impl Pong {
             // Draw P1's paddle
             &paddle.draw(
                 [
-                    self.p1_paddle.left() as f64,
-                    self.p1_paddle.top() as f64,
-                    self.p1_paddle.width() as f64,
-                    self.p1_paddle.height() as f64,
+                    self.p1.paddle.left() as f64,
+                    self.p1.paddle.top() as f64,
+                    self.p1.paddle.width() as f64,
+                    self.p1.paddle.height() as f64,
                 ],
                 &c.draw_state,
                 c.transform,
@@ -115,10 +143,10 @@ impl Pong {
             // Draw P2's paddle
             &paddle.draw(
                 [
-                    self.p2_paddle.left() as f64,
-                    self.p2_paddle.top() as f64,
-                    self.p2_paddle.width() as f64,
-                    self.p2_paddle.height() as f64,
+                    self.p2.paddle.left() as f64,
+                    self.p2.paddle.top() as f64,
+                    self.p2.paddle.width() as f64,
+                    self.p2.paddle.height() as f64,
                 ],
                 &c.draw_state,
                 c.transform,
@@ -150,8 +178,8 @@ impl Pong {
                 self.ball.center.x += self.ball.dx * args.dt;
                 self.ball.center.y += self.ball.dy * args.dt;
 
-                let p1_paddle_hitbox = self.p1_paddle.aabb();
-                let p2_paddle_hitbox = self.p2_paddle.aabb();
+                let p1_paddle_hitbox = self.p1.paddle.aabb();
+                let p2_paddle_hitbox = self.p2.paddle.aabb();
 
                 // Collision detection
                 let ball_top_right_ray = Ray {
@@ -225,7 +253,7 @@ impl Pong {
                         self.screen_height as f64 - self.ball.size as f64 / 2.0;
                 }
 
-                // Check for collision with left paddle
+                // Check for collision with p1 paddle
                 let pi = f64::consts::PI;
                 if let Some(scalar) =
                     p1_paddle_hitbox.toi_with_ray(
@@ -235,12 +263,19 @@ impl Pong {
                     ) {
                         if scalar - 0.005 <= 0.0 {
                             let offset =
-                                (self.p1_paddle.center.y - self.ball.center.y)
-                                / (self.p1_paddle.height() as f64 / 2.0);
+                                (self.p1.paddle.center.y - self.ball.center.y)
+                                / (self.p1.paddle.height() as f64 / 2.0);
                             let angle = offset * (pi / 3.0);
                             self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * angle.cos();
                             self.ball.dy = self.ball.speed as f64 * -angle.sin();
+
+                            match self.p2.playertype {
+                                PlayerType::CPU(ref mut ai) => {
+                                    ai.target = random_target(self.p2.paddle.height());
+                                },
+                                _ => {},
+                            }
                         }
                 } else if let Some(scalar) =
                     p1_paddle_hitbox.toi_with_ray(
@@ -250,16 +285,23 @@ impl Pong {
                     ) {
                         if scalar - 0.005 <= 0.0 {
                             let offset =
-                                (self.p1_paddle.center.y - self.ball.center.y)
-                                / (self.p1_paddle.height() as f64 / 2.0);
+                                (self.p1.paddle.center.y - self.ball.center.y)
+                                / (self.p1.paddle.height() as f64 / 2.0);
                             let angle = offset * (pi / 3.0);
                             self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * angle.cos();
                             self.ball.dy = self.ball.speed as f64 * -angle.sin();
+
+                            match self.p2.playertype {
+                                PlayerType::CPU(ref mut ai) => {
+                                    ai.target = random_target(self.p2.paddle.height());
+                                },
+                                _ => {},
+                            }
                         }
                 }
 
-                // Check for collision with right paddle
+                // Check for collision with p2 paddle
                 if let Some(scalar) =
                     p2_paddle_hitbox.toi_with_ray(
                         &nalgebra::Identity::new(),
@@ -268,12 +310,19 @@ impl Pong {
                     ) {
                         if scalar - 0.005 <= 0.0 {
                             let offset =
-                                (self.p2_paddle.center.y - self.ball.center.y)
-                                / (self.p2_paddle.height() as f64 / 2.0);
+                                (self.p2.paddle.center.y - self.ball.center.y)
+                                / (self.p2.paddle.height() as f64 / 2.0);
                             let angle = offset * (pi / 3.0);
                             self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * -angle.cos();
                             self.ball.dy = self.ball.speed as f64 * angle.sin();
+
+                            match self.p1.playertype {
+                                PlayerType::CPU(ref mut ai) => {
+                                    ai.target = random_target(self.p1.paddle.height());
+                                },
+                                _ => {},
+                            }
                         }
                 } else if let Some(scalar) =
                     p2_paddle_hitbox.toi_with_ray(
@@ -283,33 +332,111 @@ impl Pong {
                     ) {
                         if scalar - 0.005 <= 0.0 {
                             let offset =
-                                (self.p2_paddle.center.y - self.ball.center.y)
-                                / (self.p2_paddle.height() as f64 / 2.0);
+                                (self.p2.paddle.center.y - self.ball.center.y)
+                                / (self.p2.paddle.height() as f64 / 2.0);
                             let angle = offset * (pi / 3.0);
                             self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * -angle.cos();
                             self.ball.dy = self.ball.speed as f64 * angle.sin();
+
+                            match self.p1.playertype {
+                                PlayerType::CPU(ref mut ai) => {
+                                    ai.target = random_target(self.p1.paddle.height());
+                                },
+                                _ => {},
+                            }
                         }
                 }
 
-                // Paddle 2 AI
-                let diff = self.ball.center.y - self.p2_paddle.center.y;
-                let dy = f64::min(diff.abs(), (4.0));
-                if self.ball.center.y < self.p2_paddle.center.y - 0.1 {
-                    if self.p2_paddle.center.y - (self.p1_paddle.height() as f64 / 2.0) > 0.0 {
-                        self.p2_paddle.center.y -= dy;
-                    }
-                } else if self.ball.center.y > self.p2_paddle.center.y + 0.1 {
-                    if self.p2_paddle.center.y + (self.p1_paddle.height() as f64 / 2.0) < self.screen_height as f64 {
-                        self.p2_paddle.center.y += dy;
-                    }
+                // Update paddles
+                match self.p1.playertype {
+                    PlayerType::Human(ref method) => {
+                        match method {
+                            &InputMethod::Mouse => {
+                                if let Some(pos) = self.mouse_pos {
+                                    let half_paddle = self.p1.paddle.height() as f64 / 2.0;
+                                    let center_to_top = pos - half_paddle;
+                                    let center_to_bottom = pos + half_paddle;
+
+                                    if center_to_top as f64 > 0.0 && center_to_bottom < self.screen_height as f64 {
+                                        self.p1.paddle.center.y = pos;
+                                    } else if pos > 0.0 && pos < half_paddle {
+                                        self.p1.paddle.center.y = half_paddle;
+                                    } else if pos < self.screen_height as f64 && pos > self.screen_height as f64 - half_paddle {
+                                        self.p1.paddle.center.y = self.screen_height as f64 - half_paddle;
+                                    }
+                                }
+                            },
+                        }
+                    },
+                    PlayerType::CPU(ref ai) => {
+                        let target = match ai.target {
+                            Target::Center => { self.p1.paddle.center.y },
+                            Target::Top(n) => { self.p1.paddle.center.y - n },
+                            Target::Bottom(n) => { self.p1.paddle.center.y - n },
+                        };
+
+                        let diff = self.ball.center.y - target;
+                        let dy = f64::min(diff.abs(), (ai.max_speed));
+                        if self.ball.center.y < target - 0.1 {
+                            if target - (self.p1.paddle.height() as f64 / 2.0) > 0.0 {
+                                self.p1.paddle.center.y -= dy;
+                            }
+                        } else if self.ball.center.y > target + 0.1 {
+                            if target + (self.p1.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
+                                self.p1.paddle.center.y += dy;
+                            }
+                        }
+                    },
+                }
+
+                // Update player 2's paddle
+                match self.p2.playertype {
+                    PlayerType::Human(ref method) => {
+                        match method {
+                            &InputMethod::Mouse => {
+                                if let Some(pos) = self.mouse_pos {
+                                    let half_paddle = self.p2.paddle.height() as f64 / 2.0;
+                                    let center_to_top = pos - half_paddle;
+                                    let center_to_bottom = pos + half_paddle;
+
+                                    if center_to_top as f64 > 0.0 && center_to_bottom < self.screen_height as f64 {
+                                        self.p2.paddle.center.y = pos;
+                                    } else if pos > 0.0 && pos < half_paddle {
+                                        self.p2.paddle.center.y = half_paddle;
+                                    } else if pos < self.screen_height as f64 && pos > self.screen_height as f64 - half_paddle {
+                                        self.p2.paddle.center.y = self.screen_height as f64 - half_paddle;
+                                    }
+                                }
+                            },
+                        }
+                    },
+                    PlayerType::CPU(ref ai) => {
+                        let target = match ai.target {
+                            Target::Center => { self.p2.paddle.center.y },
+                            Target::Top(n) => { self.p2.paddle.center.y - n },
+                            Target::Bottom(n) => { self.p2.paddle.center.y - n },
+                        };
+
+                        let diff = self.ball.center.y - target;
+                        let dy = f64::min(diff.abs(), (ai.max_speed));
+                        if self.ball.center.y < target - 0.1 {
+                            if self.p2.paddle.center.y - (self.p2.paddle.height() as f64 / 2.0) > 0.0 {
+                                self.p2.paddle.center.y -= dy;
+                            }
+                        } else if self.ball.center.y > target + 0.1 {
+                            if self.p2.paddle.center.y + (self.p2.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
+                                self.p2.paddle.center.y += dy;
+                            }
+                        }
+                    },
                 }
 
                 // Check for a win
-                if self.p1_score == 10 {
+                if self.p1.score == self.max_score {
                     self.ball.visible = false;
                     self.state = GameState::P1Win;
-                } else if self.p2_score == 10 {
+                } else if self.p2.score == self.max_score {
                     self.ball.visible = false;
                     self.state = GameState::P2Win;
                 }
@@ -317,33 +444,22 @@ impl Pong {
                 // See if either player scores
                 // Maybe replace this with raycasting later
                 if self.ball.left() <= 0 {
-                    self.p2_score += 1;
-                    self.lastpoint = Some(Player::P2);
+                    self.p2.score += 1;
+                    self.prevpoint = Some(PlayerNum::P2);
                     self.start();
                 } else if self.ball.right() >= self.screen_width as i32 {
-                    self.p1_score += 1;
-                    self.lastpoint = Some(Player::P1);
+                    self.p1.score += 1;
+                    self.prevpoint = Some(PlayerNum::P1);
                     self.start();
                 }
             },
             GameState::P1Win => {
                 self.ball.visible = false;
-                if self.p2_paddle.center.y > (self.screen_height as f64 / 2.0) + 3.0 {
-                    self.p2_paddle.center.y -= 1.0;
-                } else if self.p2_paddle.center.y < (self.screen_height as f64 / 2.0) - 3.0 {
-                    self.p2_paddle.center.y += 1.0;
-                }
             },
             GameState::P2Win => {
                 self.ball.visible = false;
-                if self.p2_paddle.center.y > (self.screen_height as f64 / 2.0) + 3.0 {
-                    self.p2_paddle.center.y -= 1.0;
-                } else if self.p2_paddle.center.y < (self.screen_height as f64 / 2.0) - 3.0 {
-                    self.p2_paddle.center.y += 1.0;
-                }
             },
-            GameState::Paused => {
-            },
+            GameState::Paused => {},
         }
     }
 
@@ -352,22 +468,7 @@ impl Pong {
             &Input::Move(motion) => {
                 match motion {
                     Motion::MouseCursor(_, y) => {
-                        match self.state {
-                            GameState::Paused => {},
-                            _ => {
-                                let half_paddle = self.p1_paddle.height() as f64 / 2.0;
-                                let center_to_top = y - half_paddle;
-                                let center_to_bottom = y + half_paddle;
-
-                                if center_to_top as f64 > 0.0 && center_to_bottom < self.screen_height as f64 {
-                                    self.p1_paddle.set_location(y as i32);
-                                } else if y > 0.0 && y < half_paddle {
-                                    self.p1_paddle.set_location(half_paddle as i32);
-                                } else if y < self.screen_height as f64 && y > self.screen_height as f64 - half_paddle {
-                                    self.p1_paddle.set_location((self.screen_height as f64 - half_paddle) as i32);
-                                }
-                            },
-                        }
+                        self.mouse_pos = Some(y);
                     },
                     _ => {},
                 }
@@ -407,19 +508,23 @@ impl Pong {
             self.screen_height as f64 / 2.0
         );
         self.ball.speed = 400;
-        match self.lastpoint {
+        match self.prevpoint {
             Some(ref player) => {
                 match player {
-                    &Player::P1 => {
+                    &PlayerNum::P1 => {
                         self.ball.dx = -1.0 * self.ball.speed as f64;
                     },
-                    &Player::P2 => {
+                    &PlayerNum::P2 => {
                         self.ball.dx = self.ball.speed as f64;
                     },
                 }
             },
             None => {
-                self.ball.dx = self.ball.speed as f64;
+                if rand::thread_rng().gen::<bool>() {
+                    self.ball.dx = self.ball.speed as f64;
+                } else {
+                    self.ball.dx = -1.0 * self.ball.speed as f64;
+                }
             },
         }
         self.ball.dy = rand::thread_rng().gen_range::<i32>(-350, 351) as f64;
@@ -431,7 +536,7 @@ impl Pong {
                 format!("Pong: Press space to begin")
             },
             GameState::Started => {
-                format!("Pong: {}-{}", self.p1_score, self.p2_score)
+                format!("Pong: {}-{}", self.p1.score, self.p2.score)
             },
             GameState::P1Win => {
                 format!("Pong: Player 1 wins")
@@ -440,7 +545,7 @@ impl Pong {
                 format!("Pong: Player 2 wins")
             },
             GameState::Paused => {
-                format!("Pong: {}-{} (Paused)", self.p1_score, self.p2_score)
+                format!("Pong: {}-{} (Paused)", self.p1.score, self.p2.score)
             }
         }
     }
@@ -471,9 +576,4 @@ enum GameState {
     Paused,
     P1Win,
     P2Win,
-}
-
-enum Player {
-    P1,
-    P2,
 }
