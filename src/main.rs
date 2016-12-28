@@ -17,6 +17,7 @@ pub extern crate rand;
 
 mod pong;
 use pong::Pong;
+mod controls;
 mod paddle;
 mod ball;
 mod hitbox;

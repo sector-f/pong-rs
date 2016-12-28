@@ -1,6 +1,7 @@
 extern crate rand;
 use rand::Rng;
 use paddle::Paddle;
+use controls::*;
 
 pub struct Player {
     pub number: PlayerNum,
@@ -48,10 +49,4 @@ pub enum Target {
     Center,
     Top(f64),
     Bottom(f64),
-}
-
-pub enum InputMethod {
-    Mouse,
-    // ArrowKeys,
-    // WASD,
 }

@@ -15,6 +15,7 @@ extern crate opengl_graphics;
 use opengl_graphics::GlGraphics;
 
 use player::*;
+use controls::*;
 use paddle::Paddle;
 use ball::Ball;
 use hitbox::Hitbox;
@@ -37,7 +38,7 @@ pub struct Pong {
     screen_height: u32,
     p1: Player,
     p2: Player,
-    mouse_pos: Option<f64>,
+    controls: Controls,
     max_score: u32,
 }
 
@@ -55,8 +56,8 @@ impl Pong {
                 score: 0,
         };
 
-        // let p1_paddle = Paddle::new(p1_point);
-        // let p1_paddle_height = p1_paddle.height();
+        let p1_paddle = Paddle::new(p1_point);
+        let p1_paddle_height = p1_paddle.height();
 
         let p2_paddle = Paddle::new(p2_point);
         let p2_paddle_height = p2_paddle.height();
@@ -64,14 +65,14 @@ impl Pong {
         // let player1 = Player {
         //         number: PlayerNum::P1,
         //         paddle: p1_paddle,
-        //         playertype: PlayerType::CPU(AI::new(p1_paddle_height, 4.0)),
+        //         playertype: PlayerType::CPU(AI::new(p1_paddle_height, 10.0)),
         //         score: 0,
         // };
 
         let player2 = Player {
                 number: PlayerNum::P2,
                 paddle: p2_paddle,
-                playertype: PlayerType::CPU(AI::new(p2_paddle_height, 3.0)),
+                playertype: PlayerType::CPU(AI::new(p2_paddle_height, 3.5)),
                 score: 0,
         };
 
@@ -99,7 +100,11 @@ impl Pong {
             ),
             p1: player1,
             p2: player2,
-            mouse_pos: None,
+            controls: Controls {
+                mouse_pos: None,
+                arrows: None,
+                wasd: None,
+            },
             max_score: 10,
         }
     }
@@ -353,7 +358,7 @@ impl Pong {
                     PlayerType::Human(ref method) => {
                         match method {
                             &InputMethod::Mouse => {
-                                if let Some(pos) = self.mouse_pos {
+                                if let Some(pos) = self.controls.mouse_pos {
                                     let half_paddle = self.p1.paddle.height() as f64 / 2.0;
                                     let center_to_top = pos - half_paddle;
                                     let center_to_bottom = pos + half_paddle;
@@ -367,24 +372,47 @@ impl Pong {
                                     }
                                 }
                             },
+                            &InputMethod::ArrowKeys => {
+                            },
+                            &InputMethod::WASD => {
+                            },
                         }
                     },
                     PlayerType::CPU(ref ai) => {
-                        let target = match ai.target {
-                            Target::Center => { self.p1.paddle.center.y },
-                            Target::Top(n) => { self.p1.paddle.center.y - n },
-                            Target::Bottom(n) => { self.p1.paddle.center.y - n },
-                        };
+                        if self.ball.dx < 0.0 {
+                            let target =
+                                if self.ball.center.x > self.screen_width as f64 / 2.0 {
+                                    self.p1.paddle.center.y
+                                } else {
+                                    match ai.target {
+                                        Target::Center => { self.p1.paddle.center.y },
+                                        Target::Top(n) => { self.p1.paddle.center.y - n },
+                                        Target::Bottom(n) => { self.p1.paddle.center.y - n },
+                                    }
+                                };
 
-                        let diff = self.ball.center.y - target;
-                        let dy = f64::min(diff.abs(), (ai.max_speed));
-                        if self.ball.center.y < target - 0.1 {
-                            if target - (self.p1.paddle.height() as f64 / 2.0) > 0.0 {
-                                self.p1.paddle.center.y -= dy;
+                            let diff = self.ball.center.y - target;
+                            let dy = f64::min(diff.abs(), (ai.max_speed));
+                            if self.ball.center.y < target - 0.1 {
+                                if self.p1.paddle.center.y - (self.p1.paddle.height() as f64 / 2.0) > 0.0 {
+                                    self.p1.paddle.center.y -= dy;
+                                }
+                            } else if self.ball.center.y > target + 0.1 {
+                                if self.p1.paddle.center.y + (self.p1.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
+                                    self.p1.paddle.center.y += dy;
+                                }
                             }
-                        } else if self.ball.center.y > target + 0.1 {
-                            if target + (self.p1.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
-                                self.p1.paddle.center.y += dy;
+                        } else {
+                            let diff = self.p1.paddle.center.y - self.screen_height as f64 / 2.0;
+                            let dy = (f64::min(diff.abs(), ai.max_speed)) / 3.0;
+                            if self.p1.paddle.center.y > self.screen_height as f64 / 2.0 - 0.1 {
+                                if self.p1.paddle.center.y - (self.p1.paddle.height() as f64 / 2.0) > 0.0 {
+                                    self.p1.paddle.center.y -= dy;
+                                }
+                            } else if self.p1.paddle.center.y < self.screen_height as f64 / 2.0 + 0.1 {
+                                if self.p1.paddle.center.y + (self.p1.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
+                                    self.p1.paddle.center.y += dy;
+                                }
                             }
                         }
                     },
@@ -395,7 +423,7 @@ impl Pong {
                     PlayerType::Human(ref method) => {
                         match method {
                             &InputMethod::Mouse => {
-                                if let Some(pos) = self.mouse_pos {
+                                if let Some(pos) = self.controls.mouse_pos {
                                     let half_paddle = self.p2.paddle.height() as f64 / 2.0;
                                     let center_to_top = pos - half_paddle;
                                     let center_to_bottom = pos + half_paddle;
@@ -409,24 +437,47 @@ impl Pong {
                                     }
                                 }
                             },
+                            &InputMethod::ArrowKeys => {
+                            },
+                            &InputMethod::WASD => {
+                            },
                         }
                     },
                     PlayerType::CPU(ref ai) => {
-                        let target = match ai.target {
-                            Target::Center => { self.p2.paddle.center.y },
-                            Target::Top(n) => { self.p2.paddle.center.y - n },
-                            Target::Bottom(n) => { self.p2.paddle.center.y - n },
-                        };
+                        if self.ball.dx > 0.0 {
+                            let target =
+                                if self.ball.center.x < self.screen_width as f64 / 2.0 {
+                                    self.p2.paddle.center.y
+                                } else {
+                                    match ai.target {
+                                        Target::Center => { self.p2.paddle.center.y },
+                                        Target::Top(n) => { self.p2.paddle.center.y - n },
+                                        Target::Bottom(n) => { self.p2.paddle.center.y - n },
+                                    }
+                                };
 
-                        let diff = self.ball.center.y - target;
-                        let dy = f64::min(diff.abs(), (ai.max_speed));
-                        if self.ball.center.y < target - 0.1 {
-                            if self.p2.paddle.center.y - (self.p2.paddle.height() as f64 / 2.0) > 0.0 {
-                                self.p2.paddle.center.y -= dy;
+                            let diff = self.ball.center.y - target;
+                            let dy = f64::min(diff.abs(), ai.max_speed);
+                            if self.ball.center.y < target - 0.1 {
+                                if self.p2.paddle.center.y - (self.p2.paddle.height() as f64 / 2.0) > 0.0 {
+                                    self.p2.paddle.center.y -= dy;
+                                }
+                            } else if self.ball.center.y > target + 0.1 {
+                                if self.p2.paddle.center.y + (self.p2.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
+                                    self.p2.paddle.center.y += dy;
+                                }
                             }
-                        } else if self.ball.center.y > target + 0.1 {
-                            if self.p2.paddle.center.y + (self.p2.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
-                                self.p2.paddle.center.y += dy;
+                        } else {
+                            let diff = self.p2.paddle.center.y - self.screen_height as f64 / 2.0;
+                            let dy = (f64::min(diff.abs(), ai.max_speed)) / 3.0;
+                            if self.p2.paddle.center.y > self.screen_height as f64 / 2.0 - 0.1 {
+                                if self.p2.paddle.center.y - (self.p2.paddle.height() as f64 / 2.0) > 0.0 {
+                                    self.p2.paddle.center.y -= dy;
+                                }
+                            } else if self.p2.paddle.center.y < self.screen_height as f64 / 2.0 + 0.1 {
+                                if self.p2.paddle.center.y + (self.p2.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
+                                    self.p2.paddle.center.y += dy;
+                                }
                             }
                         }
                     },
@@ -468,7 +519,7 @@ impl Pong {
             &Input::Move(motion) => {
                 match motion {
                     Motion::MouseCursor(_, y) => {
-                        self.mouse_pos = Some(y);
+                        self.controls.mouse_pos = Some(y);
                     },
                     _ => {},
                 }
