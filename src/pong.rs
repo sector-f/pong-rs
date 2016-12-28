@@ -342,46 +342,55 @@ impl Pong {
                     self.p2_paddle.center.y += 1.0;
                 }
             },
+            GameState::Paused => {
+            },
         }
     }
 
     pub fn input(&mut self, input: &Input) {
-        match self.state {
-            GameState::Unstarted => {
-                match input {
-                    &Input::Release(button) => {
-                        match button {
-                            Button::Keyboard(key) => {
-                                match key {
-                                    Key::Space => {
-                                        self.start();
-                                    },
-                                    _ => {},
+        match input {
+            &Input::Move(motion) => {
+                match motion {
+                    Motion::MouseCursor(_, y) => {
+                        match self.state {
+                            GameState::Paused => {},
+                            _ => {
+                                let half_paddle = self.p1_paddle.height() as f64 / 2.0;
+                                let center_to_top = y - half_paddle;
+                                let center_to_bottom = y + half_paddle;
+
+                                if center_to_top as f64 > 0.0 && center_to_bottom < self.screen_height as f64 {
+                                    self.p1_paddle.set_location(y as i32);
+                                } else if y > 0.0 && y < half_paddle {
+                                    self.p1_paddle.set_location(half_paddle as i32);
+                                } else if y < self.screen_height as f64 && y > self.screen_height as f64 - half_paddle {
+                                    self.p1_paddle.set_location((self.screen_height as f64 - half_paddle) as i32);
                                 }
                             },
-                            _ => {},
                         }
                     },
                     _ => {},
                 }
             },
-            _ => {},
-        }
-
-        match input {
-            &Input::Move(motion) => {
-                match motion {
-                    Motion::MouseCursor(_, y) => {
-                        let half_paddle = self.p1_paddle.height() as f64 / 2.0;
-                        let center_to_top = y - half_paddle;
-                        let center_to_bottom = y + half_paddle;
-
-                        if center_to_top as f64 > 0.0 && center_to_bottom < self.screen_height as f64 {
-                            self.p1_paddle.set_location(y as i32);
-                        } else if y > 0.0 && y < half_paddle {
-                            self.p1_paddle.set_location(half_paddle as i32);
-                        } else if y < self.screen_height as f64 && y > self.screen_height as f64 - half_paddle {
-                            self.p1_paddle.set_location((self.screen_height as f64 - half_paddle) as i32);
+            &Input::Release(button) => {
+                match button {
+                    Button::Keyboard(key) => {
+                        match key {
+                            Key::Space => {
+                                match self.state {
+                                    GameState::Unstarted => {
+                                        self.start();
+                                    },
+                                    GameState::Started => {
+                                        self.state = GameState::Paused;
+                                    },
+                                    GameState::Paused => {
+                                        self.state = GameState::Started;
+                                    },
+                                    _ => {},
+                                }
+                            },
+                            _ => {},
                         }
                     },
                     _ => {},
@@ -430,6 +439,9 @@ impl Pong {
             GameState::P2Win => {
                 format!("Pong: Player 2 wins")
             },
+            GameState::Paused => {
+                format!("Pong: {}-{} (Paused)", self.p1_score, self.p2_score)
+            }
         }
     }
 }
@@ -456,6 +468,7 @@ impl Hitbox for Pong {
 enum GameState {
     Unstarted,
     Started,
+    Paused,
     P1Win,
     P2Win,
 }
