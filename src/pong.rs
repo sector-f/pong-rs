@@ -315,7 +315,7 @@ impl Pong {
                             let angle = offset * (pi / 3.0);
                             self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * -angle.cos();
-                            self.ball.dy = self.ball.speed as f64 * angle.sin();
+                            self.ball.dy = self.ball.speed as f64 * -angle.sin();
 
                             match self.p1.playertype {
                                 PlayerType::CPU(ref mut ai) => {
@@ -337,7 +337,7 @@ impl Pong {
                             let angle = offset * (pi / 3.0);
                             self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * -angle.cos();
-                            self.ball.dy = self.ball.speed as f64 * angle.sin();
+                            self.ball.dy = self.ball.speed as f64 * -angle.sin();
 
                             match self.p1.playertype {
                                 PlayerType::CPU(ref mut ai) => {
