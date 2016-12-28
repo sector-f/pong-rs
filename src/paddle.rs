@@ -10,7 +10,7 @@ pub struct Paddle {
 impl Paddle {
     pub fn new(center: Point2<f64>) -> Self {
         let h = 70;
-        let w = 10;
+        let w = 12;
 
         Paddle {
             center: center,

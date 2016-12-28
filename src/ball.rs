@@ -31,6 +31,10 @@ impl Ball {
         }
     }
 
+    pub fn increase_speed(&mut self) {
+        self.speed = self.speed.saturating_add(50);
+    }
+
     // pub fn top_left_ray(&self) -> Ray<Point2<f64>> {
     //     Ray {
     //         origin: self.top_left(),

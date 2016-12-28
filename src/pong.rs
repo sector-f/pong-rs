@@ -28,8 +28,8 @@ pub struct Pong {
     state: GameState,
     lastpoint: Option<Player>,
     ball: Ball,
-    left_wall: Segment<Point2<f64>>,
-    right_wall: Segment<Point2<f64>>,
+    // left_wall: Segment<Point2<f64>>,
+    // right_wall: Segment<Point2<f64>>,
     top_wall: Segment<Point2<f64>>,
     bottom_wall: Segment<Point2<f64>>,
     screen_width: u32,
@@ -53,14 +53,14 @@ impl Pong {
             ball: Ball::new(w as f64, h as f64),
             screen_width: w,
             screen_height: h,
-            left_wall: Segment::new(
-                Point2::new(0.0, 0.0),
-                Point2::new(0.0, h as f64),
-            ),
-            right_wall: Segment::new(
-                Point2::new(w as f64, 0.0),
-                Point2::new(w as f64, h as f64),
-            ),
+            // left_wall: Segment::new(
+            //     Point2::new(0.0, 0.0),
+            //     Point2::new(0.0, h as f64),
+            // ),
+            // right_wall: Segment::new(
+            //     Point2::new(w as f64, 0.0),
+            //     Point2::new(w as f64, h as f64),
+            // ),
             top_wall: Segment::new(
                 Point2::new(0.0, 0.0),
                 Point2::new(w as f64, 0.0),
@@ -78,10 +78,26 @@ impl Pong {
 
     pub fn render(&mut self, gl: &mut GlGraphics, args:&RenderArgs) {
         let paddle = rectangle::Rectangle::new(WHITE);
+        let center = rectangle::Rectangle::new(WHITE);
         let ball = rectangle::Rectangle::new(WHITE);
 
         gl.draw(args.viewport(), |c, gl| {
             clear(BLACK, gl);
+
+            // Draw center line
+            for y in (0..self.screen_height).filter(|i| i % 40 == 0) {
+                &center.draw(
+                    [
+                        self.screen_width as f64 / 2.0 - 1.0,
+                        (y + 10) as f64,
+                        2.0,
+                        20.0,
+                    ],
+                    &c.draw_state,
+                    c.transform,
+                    gl,
+                );
+            }
 
             // Draw P1's paddle
             &paddle.draw(
@@ -222,7 +238,7 @@ impl Pong {
                                 (self.p1_paddle.center.y - self.ball.center.y)
                                 / (self.p1_paddle.height() as f64 / 2.0);
                             let angle = offset * (pi / 3.0);
-                            self.ball.speed += 50;
+                            self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * angle.cos();
                             self.ball.dy = self.ball.speed as f64 * -angle.sin();
                         }
@@ -237,7 +253,7 @@ impl Pong {
                                 (self.p1_paddle.center.y - self.ball.center.y)
                                 / (self.p1_paddle.height() as f64 / 2.0);
                             let angle = offset * (pi / 3.0);
-                            self.ball.speed += 50;
+                            self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * angle.cos();
                             self.ball.dy = self.ball.speed as f64 * -angle.sin();
                         }
@@ -255,7 +271,7 @@ impl Pong {
                                 (self.p2_paddle.center.y - self.ball.center.y)
                                 / (self.p2_paddle.height() as f64 / 2.0);
                             let angle = offset * (pi / 3.0);
-                            self.ball.speed += 50;
+                            self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * -angle.cos();
                             self.ball.dy = self.ball.speed as f64 * angle.sin();
                         }
@@ -270,7 +286,7 @@ impl Pong {
                                 (self.p2_paddle.center.y - self.ball.center.y)
                                 / (self.p2_paddle.height() as f64 / 2.0);
                             let angle = offset * (pi / 3.0);
-                            self.ball.speed += 50;
+                            self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * -angle.cos();
                             self.ball.dy = self.ball.speed as f64 * angle.sin();
                         }
@@ -312,17 +328,17 @@ impl Pong {
             },
             GameState::P1Win => {
                 self.ball.visible = false;
-                if self.p2_paddle.center.y > (self.screen_height as f64 / 2.0) + 0.1 {
+                if self.p2_paddle.center.y > (self.screen_height as f64 / 2.0) + 3.0 {
                     self.p2_paddle.center.y -= 1.0;
-                } else if self.p2_paddle.center.y < (self.screen_height as f64 / 2.0) - 0.1 {
+                } else if self.p2_paddle.center.y < (self.screen_height as f64 / 2.0) - 3.0 {
                     self.p2_paddle.center.y += 1.0;
                 }
             },
             GameState::P2Win => {
                 self.ball.visible = false;
-                if self.p2_paddle.center.y > self.screen_height as f64 / 2.0 {
+                if self.p2_paddle.center.y > (self.screen_height as f64 / 2.0) + 3.0 {
                     self.p2_paddle.center.y -= 1.0;
-                } else if self.p2_paddle.center.y < self.screen_height as f64 / 2.0 {
+                } else if self.p2_paddle.center.y < (self.screen_height as f64 / 2.0) - 3.0 {
                     self.p2_paddle.center.y += 1.0;
                 }
             },
