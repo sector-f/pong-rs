@@ -29,4 +29,7 @@ pub trait Hitbox {
     fn bottom(&self) -> i32;
     fn left(&self) -> i32;
     fn right(&self) -> i32;
+
+    fn half_height(&self) -> f64;
+    fn half_width(&self) -> f64;
 }

@@ -121,7 +121,7 @@ impl Pong {
             for y in (0..self.screen_height).filter(|i| i % 40 == 0) {
                 &center.draw(
                     [
-                        self.screen_width as f64 / 2.0 - 1.0,
+                        self.half_width() - 1.0,
                         (y + 10) as f64,
                         2.0,
                         20.0,
@@ -252,10 +252,10 @@ impl Pong {
                 // To hopefully solve any remaining issues
                 if self.ball.top() < 0 {
                     self.ball.center.y =
-                        0.0 + self.ball.size as f64 / 2.0;
+                        0.0 + self.ball.half_height();
                 } else if self.ball.bottom() > self.screen_height as i32 {
                     self.ball.center.y =
-                        self.screen_height as f64 - self.ball.size as f64 / 2.0;
+                        self.screen_height as f64 - self.ball.half_height();
                 }
 
                 // Check for collision with p1 paddle
@@ -269,7 +269,7 @@ impl Pong {
                         if scalar - 0.005 <= 0.0 {
                             let offset =
                                 (self.p1.paddle.center.y - self.ball.center.y)
-                                / (self.p1.paddle.height() as f64 / 2.0);
+                                / self.p1.paddle.half_height();
                             let angle = offset * (pi / 3.0);
                             self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * angle.cos();
@@ -291,7 +291,7 @@ impl Pong {
                         if scalar - 0.005 <= 0.0 {
                             let offset =
                                 (self.p1.paddle.center.y - self.ball.center.y)
-                                / (self.p1.paddle.height() as f64 / 2.0);
+                                / self.p1.paddle.half_height();
                             let angle = offset * (pi / 3.0);
                             self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * angle.cos();
@@ -316,7 +316,7 @@ impl Pong {
                         if scalar - 0.005 <= 0.0 {
                             let offset =
                                 (self.p2.paddle.center.y - self.ball.center.y)
-                                / (self.p2.paddle.height() as f64 / 2.0);
+                                / self.p2.paddle.half_height();
                             let angle = offset * (pi / 3.0);
                             self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * -angle.cos();
@@ -338,7 +338,7 @@ impl Pong {
                         if scalar - 0.005 <= 0.0 {
                             let offset =
                                 (self.p2.paddle.center.y - self.ball.center.y)
-                                / (self.p2.paddle.height() as f64 / 2.0);
+                                / self.p2.paddle.half_height();
                             let angle = offset * (pi / 3.0);
                             self.ball.increase_speed();
                             self.ball.dx = self.ball.speed as f64 * -angle.cos();
@@ -359,7 +359,7 @@ impl Pong {
                         match method {
                             &InputMethod::Mouse => {
                                 if let Some(pos) = self.controls.mouse_pos {
-                                    let half_paddle = self.p1.paddle.height() as f64 / 2.0;
+                                    let half_paddle = self.p1.paddle.half_height();
                                     let center_to_top = pos - half_paddle;
                                     let center_to_bottom = pos + half_paddle;
 
@@ -388,11 +388,11 @@ impl Pong {
                         let diff = self.ball.center.y - target;
                         let dy = f64::min(diff.abs(), (ai.max_speed));
                         if self.ball.center.y < target - 0.1 {
-                            if self.p1.paddle.center.y - (self.p1.paddle.height() as f64 / 2.0) > 0.0 {
+                            if self.p1.paddle.center.y - self.p1.paddle.half_height() > 0.0 {
                                 self.p1.paddle.center.y -= dy;
                             }
                         } else if self.ball.center.y > target + 0.1 {
-                            if self.p1.paddle.center.y + (self.p1.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
+                            if self.p1.paddle.center.y + self.p1.paddle.half_height() < self.screen_height as f64 {
                                 self.p1.paddle.center.y += dy;
                             }
                         }
@@ -405,7 +405,7 @@ impl Pong {
                         match method {
                             &InputMethod::Mouse => {
                                 if let Some(pos) = self.controls.mouse_pos {
-                                    let half_paddle = self.p2.paddle.height() as f64 / 2.0;
+                                    let half_paddle = self.p2.paddle.half_height();
                                     let center_to_top = pos - half_paddle;
                                     let center_to_bottom = pos + half_paddle;
 
@@ -434,11 +434,11 @@ impl Pong {
                         let diff = self.ball.center.y - target;
                         let dy = f64::min(diff.abs(), ai.max_speed);
                         if self.ball.center.y < target - 0.1 {
-                            if self.p2.paddle.center.y - (self.p2.paddle.height() as f64 / 2.0) > 0.0 {
+                            if self.p2.paddle.center.y - self.p2.paddle.half_height() > 0.0 {
                                 self.p2.paddle.center.y -= dy;
                             }
                         } else if self.ball.center.y > target + 0.1 {
-                            if self.p2.paddle.center.y + (self.p2.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
+                            if self.p2.paddle.center.y + self.p2.paddle.half_height() < self.screen_height as f64 {
                                 self.p2.paddle.center.y += dy;
                             }
                         }
@@ -517,8 +517,8 @@ impl Pong {
     pub fn start(&mut self) {
         self.state = GameState::Started;
         self.ball.center = Point2::new(
-            self.screen_width as f64 / 2.0,
-            self.screen_height as f64 / 2.0
+            self.half_width(),
+            self.half_height(),
         );
         self.ball.speed = 400;
         match self.prevpoint {
@@ -579,6 +579,14 @@ impl Hitbox for Pong {
 
     fn right(&self) -> i32 {
         self.screen_width as i32
+    }
+
+    fn half_height(&self) -> f64 {
+        self.screen_height as f64 / 2.0
+    }
+
+     fn half_width(&self) -> f64 {
+        self.screen_width as f64 / 2.0
     }
 }
 

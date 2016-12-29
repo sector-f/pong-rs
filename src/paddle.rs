@@ -48,4 +48,12 @@ impl Hitbox for Paddle {
     fn right(&self) -> i32 {
         (self.center.x + self.width() as f64 / 2.0) as i32
     }
+
+    fn half_height(&self) -> f64 {
+        self.height as f64 / 2.0
+    }
+
+     fn half_width(&self) -> f64 {
+        self.width as f64 / 2.0
+    }
 }
