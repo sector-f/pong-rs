@@ -17,5 +17,5 @@ pub enum Arrow {
 
 pub enum WASD {
     W,
-    A,
+    S,
 }
