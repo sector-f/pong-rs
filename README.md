@@ -10,6 +10,7 @@ Yet another pong clone
 
 * Add a scoreboard
 * Add a "PAUSED" overlay when the game is paused
+* Improve collision detection
 * Implement a menu screen
   * Difficulty selection
   * Allow Human or CPU selection for each paddle
