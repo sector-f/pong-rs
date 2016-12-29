@@ -8,7 +8,11 @@ Yet another pong clone
 
 ## To-Do
 
-* Make AI less jittery
+* Add a scoreboard
+* Add a "PAUSED" overlay when the game is paused
 * Implement a menu screen
   * Difficulty selection
   * Allow Human or CPU selection for each paddle
+* Make AI less jittery
+  * Possibly redo AI to predict the ball's path,
+    rather than just track its Y position
