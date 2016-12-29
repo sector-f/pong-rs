@@ -65,14 +65,14 @@ impl Pong {
         // let player1 = Player {
         //         number: PlayerNum::P1,
         //         paddle: p1_paddle,
-        //         playertype: PlayerType::CPU(AI::new(p1_paddle_height, 10.0)),
+        //         playertype: PlayerType::CPU(AI::new(p1_paddle_height, 5.0)),
         //         score: 0,
         // };
 
         let player2 = Player {
                 number: PlayerNum::P2,
                 paddle: p2_paddle,
-                playertype: PlayerType::CPU(AI::new(p2_paddle_height, 3.5)),
+                playertype: PlayerType::CPU(AI::new(p2_paddle_height, 4.0)),
                 score: 0,
         };
 
@@ -379,40 +379,21 @@ impl Pong {
                         }
                     },
                     PlayerType::CPU(ref ai) => {
-                        if self.ball.dx < 0.0 {
-                            let target =
-                                if self.ball.center.x > self.screen_width as f64 / 2.0 {
-                                    self.p1.paddle.center.y
-                                } else {
-                                    match ai.target {
-                                        Target::Center => { self.p1.paddle.center.y },
-                                        Target::Top(n) => { self.p1.paddle.center.y - n },
-                                        Target::Bottom(n) => { self.p1.paddle.center.y - n },
-                                    }
-                                };
+                        let target = match ai.target {
+                            Target::Center => { self.p1.paddle.center.y },
+                            Target::Top(n) => { self.p1.paddle.center.y - n },
+                            Target::Bottom(n) => { self.p1.paddle.center.y - n },
+                        };
 
-                            let diff = self.ball.center.y - target;
-                            let dy = f64::min(diff.abs(), (ai.max_speed));
-                            if self.ball.center.y < target - 0.1 {
-                                if self.p1.paddle.center.y - (self.p1.paddle.height() as f64 / 2.0) > 0.0 {
-                                    self.p1.paddle.center.y -= dy;
-                                }
-                            } else if self.ball.center.y > target + 0.1 {
-                                if self.p1.paddle.center.y + (self.p1.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
-                                    self.p1.paddle.center.y += dy;
-                                }
+                        let diff = self.ball.center.y - target;
+                        let dy = f64::min(diff.abs(), (ai.max_speed));
+                        if self.ball.center.y < target - 0.1 {
+                            if self.p1.paddle.center.y - (self.p1.paddle.height() as f64 / 2.0) > 0.0 {
+                                self.p1.paddle.center.y -= dy;
                             }
-                        } else {
-                            let diff = self.p1.paddle.center.y - self.screen_height as f64 / 2.0;
-                            let dy = (f64::min(diff.abs(), ai.max_speed)) / 3.0;
-                            if self.p1.paddle.center.y > self.screen_height as f64 / 2.0 - 0.1 {
-                                if self.p1.paddle.center.y - (self.p1.paddle.height() as f64 / 2.0) > 0.0 {
-                                    self.p1.paddle.center.y -= dy;
-                                }
-                            } else if self.p1.paddle.center.y < self.screen_height as f64 / 2.0 + 0.1 {
-                                if self.p1.paddle.center.y + (self.p1.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
-                                    self.p1.paddle.center.y += dy;
-                                }
+                        } else if self.ball.center.y > target + 0.1 {
+                            if self.p1.paddle.center.y + (self.p1.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
+                                self.p1.paddle.center.y += dy;
                             }
                         }
                     },
@@ -444,40 +425,21 @@ impl Pong {
                         }
                     },
                     PlayerType::CPU(ref ai) => {
-                        if self.ball.dx > 0.0 {
-                            let target =
-                                if self.ball.center.x < self.screen_width as f64 / 2.0 {
-                                    self.p2.paddle.center.y
-                                } else {
-                                    match ai.target {
-                                        Target::Center => { self.p2.paddle.center.y },
-                                        Target::Top(n) => { self.p2.paddle.center.y - n },
-                                        Target::Bottom(n) => { self.p2.paddle.center.y - n },
-                                    }
-                                };
+                        let target = match ai.target {
+                            Target::Center => { self.p2.paddle.center.y },
+                            Target::Top(n) => { self.p2.paddle.center.y - n },
+                            Target::Bottom(n) => { self.p2.paddle.center.y - n },
+                        };
 
-                            let diff = self.ball.center.y - target;
-                            let dy = f64::min(diff.abs(), ai.max_speed);
-                            if self.ball.center.y < target - 0.1 {
-                                if self.p2.paddle.center.y - (self.p2.paddle.height() as f64 / 2.0) > 0.0 {
-                                    self.p2.paddle.center.y -= dy;
-                                }
-                            } else if self.ball.center.y > target + 0.1 {
-                                if self.p2.paddle.center.y + (self.p2.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
-                                    self.p2.paddle.center.y += dy;
-                                }
+                        let diff = self.ball.center.y - target;
+                        let dy = f64::min(diff.abs(), ai.max_speed);
+                        if self.ball.center.y < target - 0.1 {
+                            if self.p2.paddle.center.y - (self.p2.paddle.height() as f64 / 2.0) > 0.0 {
+                                self.p2.paddle.center.y -= dy;
                             }
-                        } else {
-                            let diff = self.p2.paddle.center.y - self.screen_height as f64 / 2.0;
-                            let dy = (f64::min(diff.abs(), ai.max_speed)) / 3.0;
-                            if self.p2.paddle.center.y > self.screen_height as f64 / 2.0 - 0.1 {
-                                if self.p2.paddle.center.y - (self.p2.paddle.height() as f64 / 2.0) > 0.0 {
-                                    self.p2.paddle.center.y -= dy;
-                                }
-                            } else if self.p2.paddle.center.y < self.screen_height as f64 / 2.0 + 0.1 {
-                                if self.p2.paddle.center.y + (self.p2.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
-                                    self.p2.paddle.center.y += dy;
-                                }
+                        } else if self.ball.center.y > target + 0.1 {
+                            if self.p2.paddle.center.y + (self.p2.paddle.height() as f64 / 2.0) < self.screen_height as f64 {
+                                self.p2.paddle.center.y += dy;
                             }
                         }
                     },

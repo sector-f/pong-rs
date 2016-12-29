@@ -33,5 +33,3 @@ and tries to get itself centered on the ball. This is to increase the frequency 
 the paddle getting to the correct location fast enough. Unfortunately, this is also
 causing a bit of jitter when the ball goes over the center line and the AI's target
 location changes.
-
-After hitting the ball, the AI returns the paddle to the middle of the screen.
