@@ -13,7 +13,13 @@ use ncollide_geometry::query::ray_internal::Ray;
 
 extern crate opengl_graphics;
 use opengl_graphics::GlGraphics;
+use opengl_graphics::glyph_cache::GlyphCache;
+use opengl_graphics::error::Error as GlError;
 
+extern crate graphics;
+use graphics::character::CharacterCache;
+
+use std::borrow::BorrowMut;
 use player::*;
 use controls::*;
 use paddle::Paddle;
@@ -25,6 +31,7 @@ use std::f64;
 
 const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+const  GRAY: [f32; 4] = [0.8, 0.8, 0.8, 1.0];
 
 pub struct Pong {
     state: GameState,
@@ -40,10 +47,11 @@ pub struct Pong {
     p2: Player,
     controls: Controls,
     max_score: u32,
+    font: Result<GlyphCache<'static>, GlError>,
 }
 
 impl Pong {
-    pub fn new(w: u32, h: u32) -> Self {
+    pub fn new(w: u32, h: u32, font: Result<GlyphCache<'static>, GlError>) -> Self {
         let paddle_gap = 30;
 
         let p1_point = Point2::new(paddle_gap as f64, h as f64 / 2.0);
@@ -106,16 +114,46 @@ impl Pong {
                 wasd: None,
             },
             max_score: 10,
+            font: font,
         }
     }
 
     pub fn render(&mut self, gl: &mut GlGraphics, args:&RenderArgs) {
         let paddle = rectangle::Rectangle::new(WHITE);
-        let center = rectangle::Rectangle::new(WHITE);
+        let center = rectangle::Rectangle::new(GRAY);
         let ball = rectangle::Rectangle::new(WHITE);
 
         gl.draw(args.viewport(), |c, gl| {
             clear(BLACK, gl);
+            let half_width = self.half_width();
+
+            if let Ok(ref mut font) = self.font {
+                let text_size = 70;
+                let p1_score = format!("{}", self.p1.score);
+                let p1_width = font.width(text_size, &p1_score);
+                let p2_score = format!("{}", self.p2.score);
+                let p2_width = font.width(text_size, &p2_score);
+
+                let mut text = graphics::Text::new_color(GRAY, text_size);
+
+                // Draw Player 1's score
+                text.draw(
+                    &format!("{}", self.p1.score),
+                    font.borrow_mut(),
+                    &c.draw_state,
+                    c.trans(half_width / 2.0 - p1_width / 2.0, 90.0).transform,
+                    gl,
+                );
+
+                // Draw Player 2's score
+                text.draw(
+                    &format!("{}", self.p2.score),
+                    font.borrow_mut(),
+                    &c.draw_state,
+                    c.trans(self.screen_width as f64 * 0.75 - p2_width / 2.0, 90.0).transform,
+                    gl,
+                );
+            }
 
             // Draw center line
             for y in (0..self.screen_height).filter(|i| i % 40 == 0) {

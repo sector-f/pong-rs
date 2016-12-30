@@ -9,6 +9,8 @@ extern crate graphics;
 
 extern crate opengl_graphics;
 use opengl_graphics::GlGraphics;
+use opengl_graphics::glyph_cache::GlyphCache;
+use opengl_graphics::error::Error as GlError;
 
 extern crate sdl2_window;
 use sdl2_window::Sdl2Window;
@@ -35,9 +37,12 @@ fn main() {
     .build()
     .expect("Failed to create window");
 
+    let font = GlyphCache::new("assets/NovaMono.ttf");
+
     let mut pong = Pong::new(
         window.size().width,
         window.size().height,
+        font,
     );
 
     let mut gl = GlGraphics::new(opengl);
